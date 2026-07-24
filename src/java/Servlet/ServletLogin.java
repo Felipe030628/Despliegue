@@ -21,10 +21,12 @@ public class ServletLogin extends HttpServlet {
             if (user != null) {
                 HttpSession session = request.getSession();
                 session.setAttribute("usuarioLogueado", user);
-                response.sendRedirect("Vista/Panel.jsp");
+                // Usamos el contextPath para que siempre encuentre la ruta exacta desde la raíz
+                response.sendRedirect(request.getContextPath() + "/Vista/Panel.jsp");
             } else {
                 request.setAttribute("mensaje", "Credenciales incorrectas.");
-                request.getRequestDispatcher("Login.jsp").forward(request, response);
+                // Aseguramos el reenvío absoluto o apuntando a la vista correcta
+                request.getRequestDispatcher("/Login.jsp").forward(request, response);
             }
         }
     }
