@@ -30,7 +30,7 @@
         <% } %>
 
         <%-- FORMULARIO CORREGIDO: Nombres de input coinciden con el Servlet --%>
-        <form action="ServletLogin" method="POST">
+        <form action="${pageContext.request.contextPath}/ServletLogin" method="POST">
             <input type="hidden" name="accion" value="ingresar">
 
             <div class="input-group-custom">
