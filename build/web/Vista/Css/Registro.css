@@ -1,0 +1,128 @@
+/* ==========================================================================
+   Estilos Premium Lounge (Idéntico al Login con nuevos campos) - BarStock 
+   ========================================================================== */
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #0d0d0d; /* Fondo oscuro puro idéntico al Login */
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 40px 20px; /* Un poco más de aire arriba y abajo para scrolling suave */
+}
+
+/* Tarjeta contenedora idéntica a la de Login */
+.register-container {
+    background-color: #1a1a1a;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 580px; /* Ajuste milimétrico para balancear las nuevas columnas */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Tipografía de marca corporativa */
+.brand-title {
+    font-family: 'Great Vibes', cursive;
+    color: #cda661; /* Dorado mate idéntico */
+    font-size: 3.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.brand-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: #8c8c8c;
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+}
+
+/* Etiquetas del formulario (Mayúsculas, doradas y negrita) */
+.form-label-premium {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #cda661;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Campos de entrada idénticos al Login */
+.form-control-premium {
+    background-color: #262626 !important;
+    border: 1px solid #333333 !important;
+    color: #ffffff !important;
+    font-size: 0.95rem;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control-premium:focus {
+    border-color: #cda661 !important;
+    box-shadow: 0 0 0 1px #cda661 !important;
+    background-color: #2a2a2a !important;
+}
+
+/* Modificación de flechas de los select nativos para acoplarse al color de la app */
+select.form-control-premium {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cda661' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 10px;
+    appearance: none;
+}
+
+/* Botón "ENTRAR AL SISTEMA" / "REGISTRAR USUARIO" */
+.btn-gold-premium {
+    background-color: #cda661 !important;
+    color: #0d0d0d !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 0.9rem;
+    padding: 1rem;
+    border-radius: 8px;
+    border: none;
+    width: 100%;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+/* Enlaces del pie de la tarjeta */
+.link-footer {
+    font-size: 0.85rem;
+    color: #8c8c8c;
+    text-decoration: none;
+    margin-top: 1.5rem;
+    display: inline-block;
+}
+
+.link-footer span {
+    color: #cda661;
+    font-weight: 600;
+}
+/* Estilos personalizados para alertas en entornos oscuros */
+.alert-premium-success {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+    border: 1px solid #198754 !important;
+    color: #4df3a5 !important;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+}
+
+.alert-premium-danger {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+    border: 1px solid #dc3545 !important;
+    color: #ff7685 !important;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+}
