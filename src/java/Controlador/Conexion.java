@@ -10,18 +10,14 @@ public class Conexion {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             
-            // Usamos directamente los datos fijos de la red interna de Railway
-            String host = "mysql.railway.internal";
-            String port = "3306";
-            String db = "railway";
+            // Usamos la URL externa fija del proxy de Railway que sabemos que sí abre puertos
+            String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
             String user = "root";
             String pass = "aSZLfvKfJVnchDkGkHFWxnycCmAICyJU";
             
-            String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            
-            System.out.println("Intentando conectar a MySQL interno...");
+            System.out.println("Conectando a traves del proxy externo de Railway...");
             con = DriverManager.getConnection(url, user, pass);
-            System.out.println("¡CONEXIÓN EXITOSA A LA BASE DE DATOS DE RAILWAY!");
+            System.out.println("¡CONEXIÓN EXITOSA A LA BASE DE DATOS!");
         } catch (Exception e) {
             System.err.println("--- ERROR FATAL EN LA CONEXION ---");
             e.printStackTrace();
