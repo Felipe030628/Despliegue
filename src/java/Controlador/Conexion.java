@@ -10,19 +10,20 @@ public class Conexion {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             
-            String host = System.getenv("MYSQLHOST") != null ? System.getenv("MYSQLHOST") : "sakura.proxy.rlwy.net";
-            String port = System.getenv("MYSQLPORT") != null ? System.getenv("MYSQLPORT") : "24908";
-            String db = System.getenv("MYSQL_DATABASE") != null ? System.getenv("MYSQL_DATABASE") : "railway";
-            String user = System.getenv("MYSQLUSER") != null ? System.getenv("MYSQLUSER") : "root";
-            String pass = System.getenv("MYSQLPASSWORD") != null ? System.getenv("MYSQLPASSWORD") : "aSZLfvKfJVnchDkGkHFWxnycCmAICyJU";
+            // Usamos directamente los datos fijos de la red interna de Railway
+            String host = "mysql.railway.internal";
+            String port = "3306";
+            String db = "railway";
+            String user = "root";
+            String pass = "aSZLfvKfJVnchDkGkHFWxnycCmAICyJU";
             
             String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
             
+            System.out.println("Intentando conectar a MySQL interno...");
             con = DriverManager.getConnection(url, user, pass);
-            System.out.println("¡Conexión exitosa a la base de datos de Railway!");
+            System.out.println("¡CONEXIÓN EXITOSA A LA BASE DE DATOS DE RAILWAY!");
         } catch (Exception e) {
-            // AQUÍ IMPRIMIMOS EL MENSAJE EXACTO DEL ERROR EN ROJO EN LOS LOGS
-            System.err.println("--- FALLO LA CONEXION A MYSQL ---");
+            System.err.println("--- ERROR FATAL EN LA CONEXION ---");
             e.printStackTrace();
         }
         return con;
