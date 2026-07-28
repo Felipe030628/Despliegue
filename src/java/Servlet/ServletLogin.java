@@ -26,7 +26,7 @@ public class ServletLogin extends HttpServlet {
                 HttpSession session = request.getSession();
                 session.setAttribute("usuarioLogueado", user);
                 // Usamos el contextPath para que siempre encuentre la ruta exacta desde la raíz
-                response.sendRedirect(request.getContextPath() + "/Vista/Panel.jsp");
+                response.sendRedirect(request.getContextPath() + "/Panel.jsp");
             } else {
                 request.setAttribute("mensaje", "Credenciales incorrectas.");
                 // Aseguramos el reenvío absoluto o apuntando a la vista correcta
