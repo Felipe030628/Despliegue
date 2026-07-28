@@ -16,9 +16,9 @@ public class UsuariosDAO {
     ResultSet rs;
 
     // 1. Validar Login
-    public boolean validarLogin(String correo, String password) {
-    boolean encon = false;
-    String sql = "SELECT * FROM usuarios WHERE correo = ? AND password = ?"; // (o el nombre de tu tabla y campos)
+ public Usuarios validarLogin(String correo, String password) {
+    Usuarios user = null;
+    String sql = "SELECT * FROM usuarios WHERE correo = ? AND password = ?";
     
     try {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -33,16 +33,21 @@ public class UsuariosDAO {
         java.sql.ResultSet rs = ps.executeQuery();
         
         if (rs.next()) {
-            encon = true;
+            user = new Usuarios();
+            user.setIdUsuarios(rs.getInt("id"));
+            user.setCorreo(rs.getString("correo"));
+            user.setContrasena(rs.getString("password"));
         }
         
+        rs.close();
+        ps.close();
         conexionDirecta.close();
     } catch (Exception e) {
         System.err.println("--- ERROR DIRECTO EN EL DAO ---");
         e.printStackTrace();
     }
     
-    return encon;
+    return user;
 }
 
     // 2. Registrar Usuario
