@@ -16,25 +16,34 @@ public class UsuariosDAO {
     ResultSet rs;
 
     // 1. Validar Login
-    public Usuarios validarLogin(String correo, String contrasena) {
-        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
-        Usuarios user = null;
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, correo);
-            ps.setString(2, contrasena);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                user = mapearUsuario(rs);
-            }
-        } catch (Exception e) {
-            System.out.println("❌ Error en validarLogin: " + e.getMessage());
-        } finally { 
-            cerrarRecursos(); 
+    public boolean validarLogin(String correo, String password) {
+    boolean encon = false;
+    String sql = "SELECT * FROM usuarios WHERE correo = ? AND password = ?"; // (o el nombre de tu tabla y campos)
+    
+    try {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        
+        // Conexión directa dentro del mismo método para evitar nulos
+        java.sql.Connection conexionDirecta = java.sql.DriverManager.getConnection(url, "root", "aSZLfvKfJVnchDkGkHFWxnycCmAICyJU");
+        
+        java.sql.PreparedStatement ps = conexionDirecta.prepareStatement(sql);
+        ps.setString(1, correo);
+        ps.setString(2, password);
+        java.sql.ResultSet rs = ps.executeQuery();
+        
+        if (rs.next()) {
+            encon = true;
         }
-        return user;
+        
+        conexionDirecta.close();
+    } catch (Exception e) {
+        System.err.println("--- ERROR DIRECTO EN EL DAO ---");
+        e.printStackTrace();
     }
+    
+    return encon;
+}
 
     // 2. Registrar Usuario
     public int registrar(Usuarios u) {
