@@ -2,12 +2,13 @@ package Servlet;
 
 import Controlador.UsuariosDAO;
 import Modelo.Usuarios;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-
-        
 
 @WebServlet(name = "ServletLogin", urlPatterns = {"/ServletLogin"})
 public class ServletLogin extends HttpServlet {
@@ -25,11 +26,9 @@ public class ServletLogin extends HttpServlet {
             if (user != null) {
                 HttpSession session = request.getSession();
                 session.setAttribute("usuarioLogueado", user);
-                // Usamos el contextPath para que siempre encuentre la ruta exacta desde la raíz
                 response.sendRedirect(request.getContextPath() + "/Panel.jsp");
             } else {
                 request.setAttribute("mensaje", "Credenciales incorrectas.");
-                // Aseguramos el reenvío absoluto o apuntando a la vista correcta
                 request.getRequestDispatcher("/Login.jsp").forward(request, response);
             }
         }
