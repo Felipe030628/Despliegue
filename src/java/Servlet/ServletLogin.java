@@ -1,4 +1,4 @@
-package Servlet;
+package servlet;
 
 import Controlador.UsuariosDAO;
 import java.io.IOException;
@@ -17,14 +17,14 @@ public class ServletLogin extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         
-        // Capturamos los campos que vienen del formulario HTML
-        String correo = request.getParameter("correo");
-        String contrasena = request.getParameter("password");
+        // CORREGIDO: Ahora coinciden exactamente con el name del JSP
+        String correo = request.getParameter("txtCorreo");
+        String contrasena = request.getParameter("txtContrasena");
         
         // Instanciamos el DAO
         UsuariosDAO dao = new UsuariosDAO();
         
-        // Validamos el login (ahora recibe el objeto completo)
+        // Validamos el login
         Usuarios user = dao.validarLogin(correo, contrasena);
 
         if (user != null) {
