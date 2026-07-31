@@ -25,7 +25,7 @@ public class UsuariosDAO {
         String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
         
         // Conexión directa dentro del mismo método para evitar nulos
-        java.sql.Connection conexionDirecta = java.sql.DriverManager.getConnection(url, "railway", "aSZLfvKfJVnchDkGkHFWxnycCmAICyJU");
+        java.sql.Connection conexionDirecta = java.sql.DriverManager.getConnection(url, "railway", "aSZLfvKfJVnchDkGkHFWxnycCmAIcYJU");
         
         java.sql.PreparedStatement ps = conexionDirecta.prepareStatement(sql);
         ps.setString(1, correo);
