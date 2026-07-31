@@ -10,16 +10,24 @@ public class Conexion {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             
-            // Railway te inyecta la URL completa en esta variable
-            String url = System.getenv("DATABASE_URL");
+            // Capturamos las variables de entorno oficiales de Railway
+            String host = System.getenv("MYSQLHOST");
+            String port = System.getenv("MYSQLPORT");
+            String db   = System.getenv("MYSQLDATABASE");
+            String user = System.getenv("MYSQLUSER");
+            String pass = System.getenv("MYSQLPASSWORD");
             
-            if (url == null || url.isEmpty()) {
-                // Respaldo por si lo corres local en tu PC
-                url = "jdbc:mysql://localhost:3306/barstock?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            }
+            // Si por alguna razón alguna es null (corriendo local), ponemos respaldos
+            if (host == null) host = "localhost";
+            if (port == null) port = "3306";
+            if (db == null) db = "barstock";
+            if (user == null) user = "root";
+            if (pass == null) pass = "";
             
-            System.out.println("Conectando a la base de datos...");
-            con = DriverManager.getConnection(url); // La URL de Railway ya trae usuario y contraseña incluidos
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+            
+            System.out.println("Intentando conectar a: " + host + ":" + port + " con usuario: " + user);
+            con = DriverManager.getConnection(url, user, pass);
             System.out.println("¡CONEXIÓN EXITOSA A LA BASE DE DATOS!");
         } catch (Exception e) {
             System.err.println("--- ERROR FATAL EN LA CONEXION ---");
