@@ -58,9 +58,11 @@
                 <div class="col-md-5 mb-3">
                     <label class="form-label-premium">Tipo Documento</label>
                     <select name="txtIdTipoDoc" class="form-select form-control-premium">
-                        <option value="1">Cédula de Ciudadanía</option>
-                        <option value="2">Tarjeta de Identidad</option>
-                    </select>
+    <option value="">Seleccione un documento...</option>
+    <c:forEach var="doc" items="${listaDocumentos}">
+        <option value="${doc.idTipoDocumento}">${doc.nombre_documento}</option>
+    </c:forEach>
+</select>
                 </div>
                 <div class="col-md-7 mb-3">
                     <label class="form-label-premium">Número de Documento</label>
