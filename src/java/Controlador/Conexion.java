@@ -12,7 +12,7 @@ public class Conexion {
             
             // Usamos la URL externa fija del proxy de Railway
             String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            String user = "railway"; // <--- CAMBIADO DE "root" A "railway"
+            String user = "railway";
             String pass = "aSZLfvKfJVnchDkGkHFWxnycCmAIcYJU";
             
             System.out.println("Conectando a traves del proxy externo de Railway...");
