@@ -57,9 +57,9 @@
             <div class="row">
                 <div class="col-md-5 mb-3">
                     <label class="form-label-premium">Tipo Documento</label>
-                    <select name="txtIdTipoDoc" class="form-select form-control-premium">
+                    <select name="txttipoDocumento" class="form-select form-control-premium" required>
     <option value="">Seleccione un documento...</option>
-    <c:forEach var="doc" items="${listaDocumentos}">
+    <c:forEach var="doc" items="${listaTiposDoc}">
         <option value="${doc.idTipoDocumento}">${doc.nombre_documento}</option>
     </c:forEach>
 </select>
