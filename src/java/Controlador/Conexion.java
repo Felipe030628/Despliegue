@@ -10,12 +10,16 @@ public class Conexion {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             
-            // Usamos la URL externa fija del proxy de Railway
-            String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            String user = "railway";
-            String pass = "aSZLfvKfJVnchDkGkHFWxnycCmAIcYJU";
+            // Leemos las variables que Railway le pasa internamente al contenedor
+            String host = System.getenv("MYSQLHOST") != null ? System.getenv("MYSQLHOST") : "mysql.railway.internal";
+            String port = System.getenv("MYSQLPORT") != null ? System.getenv("MYSQLPORT") : "3306";
+            String db   = System.getenv("MYSQLDATABASE") != null ? System.getenv("MYSQLDATABASE") : "railway";
+            String user = System.getenv("MYSQLUSER") != null ? System.getenv("MYSQLUSER") : "root";
+            String pass = System.getenv("MYSQLPASSWORD") != null ? System.getenv("MYSQLPASSWORD") : "aSZLfvKfJVnchDkGkHFWxnycCmAIcYJU";
             
-            System.out.println("Conectando a traves del proxy externo de Railway...");
+            String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+            
+            System.out.println("Conectando a la base de datos en: " + host);
             con = DriverManager.getConnection(url, user, pass);
             System.out.println("¡CONEXIÓN EXITOSA A LA BASE DE DATOS!");
         } catch (Exception e) {
