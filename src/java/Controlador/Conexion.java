@@ -10,23 +10,16 @@ public class Conexion {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             
-            // Capturamos las variables de entorno oficiales de Railway
-            String host = System.getenv("MYSQLHOST");
-            String port = System.getenv("MYSQLPORT");
-            String db   = System.getenv("MYSQLDATABASE");
-            String user = System.getenv("MYSQLUSER");
-            String pass = System.getenv("MYSQLPASSWORD");
-            
-            // Si por alguna razón alguna es null (corriendo local), ponemos respaldos
-            if (host == null) host = "localhost";
-            if (port == null) port = "3306";
-            if (db == null) db = "barstock";
-            if (user == null) user = "root";
-            if (pass == null) pass = "";
+            // Datos fijos obtenidos directamente de tu panel de Railway (Servicio MySQL)
+            String host = "sakura.proxy.rlwy.net";
+            String port = "24908";
+            String db   = "railway";
+            String user = "root";
+            String pass = "aSZLfvKfJVnchDkGkHFWxnycCmAIcYJU";
             
             String url = "jdbc:mysql://" + host + ":" + port + "/" + db + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
             
-            System.out.println("Intentando conectar a: " + host + ":" + port + " con usuario: " + user);
+            System.out.println("Intentando conectar a la base de datos...");
             con = DriverManager.getConnection(url, user, pass);
             System.out.println("¡CONEXIÓN EXITOSA A LA BASE DE DATOS!");
         } catch (Exception e) {
