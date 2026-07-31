@@ -72,7 +72,6 @@
                     <div class="col-md-2"><input type="number" step="0.01" name="precio" class="form-control" placeholder="Precio" required></div>
                     <div class="col-md-3"><input type="date" name="fecha_vencimiento" class="form-control" required></div>
                     <div class="col-md-2">
-                        <label>Categoría:</label>
 <select name="idCategoria" class="form-control" required>
     <option value="">Seleccione una categoría...</option>
     <c:forEach var="cat" items="${listaCategorias}">
