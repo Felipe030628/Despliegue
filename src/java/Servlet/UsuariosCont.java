@@ -25,27 +25,27 @@ public class UsuariosCont extends HttpServlet {
 
         if (accion != null) {
             switch (accion) {
-                case "listar":
-                    List<Usuarios> lista = dao.listarUsuarios();
-                    request.setAttribute("listaUsuarios", lista);
-                    request.getRequestDispatcher("Vista/Empleados.jsp").forward(request, response);
+                case "nuevoRegistro":
+                    List<TiposDocumentos> listaTiposDocReg = dao.listarTiposDocumentoMayores();
+                    request.setAttribute("listaTiposDoc", listaTiposDocReg);
+                    request.getRequestDispatcher("Registro.jsp").forward(request, response);
                     break;
                     
                 case "cargar":
                     int id = Integer.parseInt(request.getParameter("id"));
                     Usuarios usuario = dao.listarPorId(id);
-                    List<TiposDocumentos> listaTiposDoc = dao.listarTiposDocumentoMayores(); // Carga la lista filtrada con TiposDocumentos
+                    List<TiposDocumentos> listaTiposDoc = dao.listarTiposDocumentoMayores();
                     
                     request.setAttribute("usuario", usuario);
-                    request.setAttribute("listaTiposDoc", listaTiposDoc); // Envía la lista al JSP
+                    request.setAttribute("listaTiposDoc", listaTiposDoc);
                     request.getRequestDispatcher("Vista/EditarEmpleado.jsp").forward(request, response);
                     break;
                     
-                    case "eliminar":
-                int idEliminar = Integer.parseInt(request.getParameter("id"));
-                dao.eliminar(idEliminar);
-                response.sendRedirect("UsuariosCont?accion=listar");
-                break;
+                case "eliminar":
+                    int idEliminar = Integer.parseInt(request.getParameter("id"));
+                    dao.eliminar(idEliminar);
+                    response.sendRedirect("UsuariosCont?accion=listar");
+                    break;
             }
         } else {
             response.sendRedirect("Vista/Panel.jsp");
