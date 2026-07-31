@@ -1,4 +1,4 @@
-package servlet;
+package Servlet;
 
 import Controlador.UsuariosDAO;
 import java.io.IOException;
