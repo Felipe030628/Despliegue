@@ -50,6 +50,7 @@ public class UsuariosDAO {
     return user;
 }
 
+
     // 2. Registrar Usuario
     public int registrar(Usuarios u) {
         String sql = "INSERT INTO usuarios (nombre, apellido, correo, fecha_nacimiento, idTipoDocumento, num_documento, telefono, direccion, contrasena, idRol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
