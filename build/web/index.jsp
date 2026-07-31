@@ -56,7 +56,7 @@
                         INICIAR SESIÓN
                     </a>
 
-                    <a href="Registro.jsp"
+                    <a href="RegistroCont"
                        class="btn-login-nav"
                        style="background: transparent; border: 1px solid #d4af37; color: #d4af37;">
                         REGISTRARSE
