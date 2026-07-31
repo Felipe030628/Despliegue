@@ -56,13 +56,15 @@
 
             <div class="row">
                 <div class="col-md-5 mb-3">
-                    <label class="form-label-premium">Tipo Documento</label>
-                    <select name="txttipoDocumento" class="form-select form-control-premium" required>
-    <option value="">Seleccione un documento...</option>
-    <c:forEach var="doc" items="${listaTiposDoc}">
-        <option value="${doc.idTipoDocumento}">${doc.nombre_documento}</option>
-    </c:forEach>
-</select>
+                    <label class="form-label">Tipo de Documento</label>
+                        <select name="idTipoDocumento" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            <c:forEach var="td" items="${listaTiposDoc}">
+                                <option value="${td.idTipoDocumento}" ${usuario.idTipoDocumento == td.idTipoDocumento ? 'selected' : ''}>
+                                    ${td.nombre_documento}
+                                </option>
+                            </c:forEach>
+                        </select>
                 </div>
                 <div class="col-md-7 mb-3">
                     <label class="form-label-premium">Número de Documento</label>
