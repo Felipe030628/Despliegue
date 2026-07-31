@@ -17,38 +17,28 @@ public class UsuariosDAO {
 
     // 1. Validar Login
  public Usuarios validarLogin(String correo, String password) {
-    Usuarios user = null;
-    String sql = "SELECT * FROM usuarios WHERE correo = ? AND password = ?";
-    
-    try {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        Usuarios user = null;
+        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
         
-        // Conexión directa dentro del mismo método para evitar nulos
-        java.sql.Connection conexionDirecta = java.sql.DriverManager.getConnection(url, "railway", "aSZLfvKfJVnchDkGkHFWxnycCmAIcYJU");
-        
-        java.sql.PreparedStatement ps = conexionDirecta.prepareStatement(sql);
-        ps.setString(1, correo);
-        ps.setString(2, password);
-        java.sql.ResultSet rs = ps.executeQuery();
-        
-        if (rs.next()) {
-            user = new Usuarios();
-            user.setIdUsuarios(rs.getInt("id"));
-            user.setCorreo(rs.getString("correo"));
-            user.setContrasena(rs.getString("password"));
+        try {
+            con = cn.Conexion(); // Usamos la clase Conexion centralizada
+            ps = con.prepareStatement(sql);
+            ps.setString(1, correo);
+            ps.setString(2, password);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                user = mapearUsuario(rs); // Reutilizamos tu método mapearUsuario que ya funciona perfecto
+            }
+        } catch (Exception e) {
+            System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            cerrarRecursos();
         }
         
-        rs.close();
-        ps.close();
-        conexionDirecta.close();
-    } catch (Exception e) {
-        System.err.println("--- ERROR DIRECTO EN EL DAO ---");
-        e.printStackTrace();
+        return user;
     }
-    
-    return user;
-}
 
 
     // 2. Registrar Usuario
