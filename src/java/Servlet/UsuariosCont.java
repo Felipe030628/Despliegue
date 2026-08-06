@@ -41,11 +41,18 @@ public class UsuariosCont extends HttpServlet {
                     request.getRequestDispatcher("Vista/EditarEmpleado.jsp").forward(request, response);
                     break;
                     
-                    case "eliminar":
-                int idEliminar = Integer.parseInt(request.getParameter("id"));
-                dao.eliminar(idEliminar);
-                response.sendRedirect("UsuariosCont?accion=listar");
-                break;
+                case "eliminar":
+                    int idEliminar = Integer.parseInt(request.getParameter("id"));
+                    dao.eliminar(idEliminar);
+                    response.sendRedirect("UsuariosCont?accion=listar");
+                    break;
+                    
+                case "cambiarEstado":
+                    int idEstado = Integer.parseInt(request.getParameter("id"));
+                    int nuevoEstado = Integer.parseInt(request.getParameter("activo"));
+                    dao.cambiarEstado(idEstado, nuevoEstado);
+                    response.sendRedirect("UsuariosCont?accion=listar");
+                    break;
             }
         } else {
             response.sendRedirect("Vista/Panel.jsp");
@@ -78,7 +85,7 @@ public class UsuariosCont extends HttpServlet {
                     u.setCorreo(correo);
                     u.setFecha_nacimiento(fechaNac);
                     u.setIdTipoDocumento(idTipoDocumento);
-                    u.setNombre_documento(numDoc); // Corregido a setNum_documento
+                    u.setNombre_documento(numDoc);
                     u.setTelefono(telefono);
                     u.setDireccion(direccion);
                     u.setIdRol(idRol);
@@ -116,7 +123,7 @@ public class UsuariosCont extends HttpServlet {
                     usuAct.setCorreo(correo);
                     usuAct.setContrasena(contrasena);
                     usuAct.setIdTipoDocumento(idTipoDocumento);
-                    usuAct.setNombre_documento(num_documento); // Corregido a setNum_documento
+                    usuAct.setNombre_documento(num_documento);
                     usuAct.setTelefono(telefono);
                     usuAct.setDireccion(direccion);
                     usuAct.setIdRol(idRol);
