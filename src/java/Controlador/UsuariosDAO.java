@@ -18,7 +18,7 @@ public class UsuariosDAO {
     // 1. Validar Login
     public Usuarios validarLogin(String correo, String password) {
         Usuarios user = null;
-        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
+        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ? AND estado_verificacion = 1";
         
         try {
             con = cn.Conexion();
@@ -237,5 +237,53 @@ public class UsuariosDAO {
             cerrarRecursos();
         }
         return ok;
+    }
+    public boolean actualizarCodigoVerificacion(String correo, String codigo) {
+        boolean actualizado = false;
+        String sql = "UPDATE usuarios SET codigo_verificacion = ? WHERE correo = ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setString(1, codigo);
+            ps.setString(2, correo);
+            ps.executeUpdate();
+            actualizado = true;
+        } catch (Exception e) {
+            System.out.println("❌ Error al actualizar código de verificación: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return actualizado;
+    }
+    
+    public boolean validarYActivarCuenta(String correo, String codigoIngresado) {
+        boolean verificado = false;
+        String sqlSelect = "SELECT codigo_verificacion FROM usuarios WHERE correo = ?";
+        String sqlUpdate = "UPDATE usuarios SET estado_verificacion = 1, codigo_verificacion = NULL WHERE correo = ?";
+        
+        try {
+            con = cn.Conexion();
+            // Primero validamos el código
+            ps = con.prepareStatement(sqlSelect);
+            ps.setString(1, correo);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                String codigoBD = rs.getString("codigo_verificacion");
+                if (codigoBD != null && codigoBD.equals(codigoIngresado)) {
+                    // Si coincide, actualizamos el estado a verificado
+                    PreparedStatement psUpdate = con.prepareStatement(sqlUpdate);
+                    psUpdate.setString(1, correo);
+                    psUpdate.executeUpdate();
+                    psUpdate.close();
+                    verificado = true;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al validar código: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return verificado;
     }
 }

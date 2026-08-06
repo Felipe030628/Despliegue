@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import Controlador.CorreoUtil;
 
 @WebServlet(name = "UsuariosCont", urlPatterns = {"/UsuariosCont"})
 public class UsuariosCont extends HttpServlet {
@@ -53,6 +54,19 @@ public class UsuariosCont extends HttpServlet {
                     dao.cambiarEstado(idEstado, nuevoEstado);
                     response.sendRedirect("UsuariosCont?accion=listar");
                     break;
+                    
+                case "verificarCodigo":
+                    String correoV = (String) request.getSession().getAttribute("correoVerificar");
+                    String codigoIngresado = request.getParameter("txtcodigo");
+                    
+                    boolean valido = dao.validarYActivarCuenta(correoV, codigoIngresado);
+                    if (valido) {
+                        request.getSession().removeAttribute("correoVerificar");
+                        response.sendRedirect("Login.jsp?status=verificado");
+                    } else {
+                        response.sendRedirect("Vista/VerificarCodigo.jsp?status=error_codigo");
+                    }
+                    break;
             }
         } else {
             response.sendRedirect("Vista/Panel.jsp");
@@ -94,7 +108,22 @@ public class UsuariosCont extends HttpServlet {
                     int res = dao.registrar(u);
                     
                     if (res > 0) {
-                        response.sendRedirect("Login.jsp?status=success");
+                        // 1. Generar un código aleatorio de 6 dígitos
+                        String codigoVerificacion = String.format("%06d", new java.util.Random().nextInt(999999));
+                        
+                        // 2. Guardarlo en la BD asociado al correo
+                        dao.actualizarCodigoVerificacion(correo, codigoVerificacion);
+                        
+                        // 3. Enviar el correo electrónico
+                        boolean enviado = CorreoUtil.enviarCorreo(correo, codigoVerificacion);
+                        
+                        if (enviado) {
+                            // Guardamos el correo en sesión para saber a quién verificar
+                            request.getSession().setAttribute("correoVerificar", correo);
+                            response.sendRedirect("Vista/VerificarCodigo.jsp?status=enviado");
+                        } else {
+                            response.sendRedirect("Registro.jsp?status=error_correo");
+                        }
                     } else {
                         response.sendRedirect("Registro.jsp?status=error");
                     }
