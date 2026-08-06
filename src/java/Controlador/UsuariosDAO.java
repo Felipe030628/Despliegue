@@ -17,28 +17,29 @@ public class UsuariosDAO {
 
     // 1. Validar Login
     public Usuarios validarLogin(String correo, String password) {
-        Usuarios user = null;
-        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ? AND estado_verificacion = 1";
+    Usuarios user = null;
+    // Quitamos temporalmente el filtro de estado para probar
+    String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
+    
+    try {
+        con = cn.Conexion();
+        ps = con.prepareStatement(sql);
+        ps.setString(1, correo);
+        ps.setString(2, password);
+        rs = ps.executeQuery();
         
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, correo);
-            ps.setString(2, password);
-            rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                user = mapearUsuario(rs);
-            }
-        } catch (Exception e) {
-            System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            cerrarRecursos();
+        if (rs.next()) {
+            user = mapearUsuario(rs);
         }
-        
-        return user;
+    } catch (Exception e) {
+        System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
+        e.printStackTrace();
+    } finally {
+        cerrarRecursos();
     }
+    
+    return user;
+}
 
     // 2. Registrar Usuario
     public int registrar(Usuarios u) {
