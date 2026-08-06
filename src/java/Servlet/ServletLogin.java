@@ -17,21 +17,30 @@ public class ServletLogin extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         
-        // CORREGIDO: Ahora coinciden exactamente con el name del JSP
+        // Obtenemos los datos del formulario de login
         String correo = request.getParameter("txtCorreo");
         String contrasena = request.getParameter("txtContrasena");
         
         // Instanciamos el DAO
         UsuariosDAO dao = new UsuariosDAO();
         
-        // Validamos el login
+        // Validamos el login mediante correo y contraseña
         Usuarios user = dao.validarLogin(correo, contrasena);
 
         if (user != null) {
-            HttpSession session = request.getSession();
-            session.setAttribute("usuarioLogueado", user);
-            response.sendRedirect(request.getContextPath() + "/Vista/Panel.jsp");
+            // Verificamos si el usuario está activo (asumiendo que getEstado() o getActivo() retorna 1 o true)
+            // Ajusta "user.getActivo() == 1" según como tengas definido tu campo en el Modelo
+            if (user.getActivo() == 1) { 
+                HttpSession session = request.getSession();
+                session.setAttribute("usuarioLogueado", user);
+                response.sendRedirect(request.getContextPath() + "/Vista/Panel.jsp");
+            } else {
+                // Si está inactivo, bloqueamos el acceso y mandamos mensaje
+                request.setAttribute("mensaje", "Su cuenta se encuentra inactiva. Contacte al administrador.");
+                request.getRequestDispatcher("/Login.jsp").forward(request, response);
+            }
         } else {
+            // Credenciales incorrectas
             request.setAttribute("mensaje", "Credenciales incorrectas.");
             request.getRequestDispatcher("/Login.jsp").forward(request, response);
         }

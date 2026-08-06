@@ -13,6 +13,7 @@ public class Usuarios {
     private String direccion;
     private String contrasena;
     private int idRol;
+    private int activo; // 1 = Activo, 0 = Inactivo (Baja lógica para cumplir con el profesor)
 
     // Constructor vacío
     public Usuarios() {}
@@ -50,4 +51,7 @@ public class Usuarios {
 
     public int getIdRol() { return idRol; }
     public void setIdRol(int idRol) { this.idRol = idRol; }
+
+    public int getActivo() { return activo; }
+    public void setActivo(int activo) { this.activo = activo; }
 }
