@@ -19,7 +19,7 @@ public class UsuariosDAO {
     public Usuarios validarLogin(String correo, String password) {
     Usuarios user = null;
     // Quitamos temporalmente el filtro de estado para probar
-    String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
+    String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ? AND estado_verificacion = 1";
     
     try {
         con = cn.Conexion();

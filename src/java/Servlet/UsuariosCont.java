@@ -35,10 +35,10 @@ public class UsuariosCont extends HttpServlet {
                 case "cargar":
                     int id = Integer.parseInt(request.getParameter("id"));
                     Usuarios usuario = dao.listarPorId(id);
-                    List<TiposDocumentos> listaTiposDoc = dao.listarTiposDocumentoMayores(); // Carga la lista filtrada con TiposDocumentos
+                    List<TiposDocumentos> listaTiposDoc = dao.listarTiposDocumentoMayores(); 
                     
                     request.setAttribute("usuario", usuario);
-                    request.setAttribute("listaTiposDoc", listaTiposDoc); // Envía la lista al JSP
+                    request.setAttribute("listaTiposDoc", listaTiposDoc); 
                     request.getRequestDispatcher("Vista/EditarEmpleado.jsp").forward(request, response);
                     break;
                     
@@ -85,13 +85,13 @@ public class UsuariosCont extends HttpServlet {
                     String nombre = request.getParameter("txtnombre");
                     String apellido = request.getParameter("txtapellido");
                     String correo = request.getParameter("txtemail");
-                    String fechaNac = request.getParameter("txtfechaNacimiento");
-                    String numDoc = request.getParameter("txtnumDocumento");
-                    String telefono = request.getParameter("txttelefono");
+                    String fechaNac = request.getParameter("txtfechaNac");     // Corregido a txtfechaNac
+                    String numDoc = request.getParameter("txtnumdoc");         // Corregido a txtnumdoc
+                    String telefono = request.getParameter("txttel");         // Corregido a txttel
                     String direccion = request.getParameter("txtdireccion");
                     String contrasena = request.getParameter("txtpass");
                     
-                    int idTipoDocumento = Integer.parseInt(request.getParameter("txttipoDocumento"));
+                    int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); // Corregido a txtIdTipoDoc
                     int idRol = Integer.parseInt(request.getParameter("txtrol"));
                     
                     u.setNombre(nombre);
@@ -118,7 +118,6 @@ public class UsuariosCont extends HttpServlet {
                         boolean enviado = CorreoUtil.enviarCorreo(correo, codigoVerificacion);
                         
                         if (enviado) {
-                            // Guardamos el correo en sesión para saber a quién verificar
                             request.getSession().setAttribute("correoVerificar", correo);
                             response.sendRedirect("Vista/VerificarCodigo.jsp?status=enviado");
                         } else {
