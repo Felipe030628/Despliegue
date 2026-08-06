@@ -85,13 +85,13 @@ public class UsuariosCont extends HttpServlet {
                     String nombre = request.getParameter("txtnombre");
                     String apellido = request.getParameter("txtapellido");
                     String correo = request.getParameter("txtemail");
-                    String fechaNac = request.getParameter("txtfechaNac");     // Corregido a txtfechaNac
-                    String numDoc = request.getParameter("txtnumdoc");         // Corregido a txtnumdoc
-                    String telefono = request.getParameter("txttel");         // Corregido a txttel
+                    String fechaNac = request.getParameter("txtfechaNac");     
+                    String numDoc = request.getParameter("txtnumdoc");         
+                    String telefono = request.getParameter("txttel");          
                     String direccion = request.getParameter("txtdireccion");
                     String contrasena = request.getParameter("txtpass");
                     
-                    int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); // Corregido a txtIdTipoDoc
+                    int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); 
                     int idRol = Integer.parseInt(request.getParameter("txtrol"));
                     
                     u.setNombre(nombre);
@@ -114,15 +114,20 @@ public class UsuariosCont extends HttpServlet {
                         // 2. Guardarlo en la BD asociado al correo
                         dao.actualizarCodigoVerificacion(correo, codigoVerificacion);
                         
-                        // 3. Enviar el correo electrónico
-                        boolean enviado = CorreoUtil.enviarCorreo(correo, codigoVerificacion);
+                        // 3. Guardar el correo en sesión y enviar el correo en un hilo independiente (evita congelamientos)
+                        request.getSession().setAttribute("correoVerificar", correo);
                         
-                        if (enviado) {
-                            request.getSession().setAttribute("correoVerificar", correo);
-                            response.sendRedirect("Vista/VerificarCodigo.jsp?status=enviado");
-                        } else {
-                            response.sendRedirect("Registro.jsp?status=error_correo");
-                        }
+                        new Thread(() -> {
+                            try {
+                                CorreoUtil.enviarCorreo(correo, codigoVerificacion);
+                            } catch (Exception e) {
+                                System.out.println("Aviso: No se pudo enviar el correo de fondo: " + e.getMessage());
+                            }
+                        }).start();
+                        
+                        // 4. Redirigir de inmediato a la vista de verificación sin quedarse bloqueado
+                        response.sendRedirect("Vista/VerificarCodigo.jsp?status=enviado");
+                        
                     } else {
                         response.sendRedirect("Registro.jsp?status=error");
                     }
