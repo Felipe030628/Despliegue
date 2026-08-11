@@ -1,4 +1,4 @@
-name: Desplegar Java NetBeans en Azure
+name: Desplegar Barstock en Azure
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Compilar proyecto NetBeans con Ant
+      - name: Compilar el proyecto NetBeans
         run: ant -Dlibs.CopyLibs.classpath=lib/org-netbeans-modules-java-j2seproject-copylibstask.jar clean dist
 
       - name: Publicar en Azure
