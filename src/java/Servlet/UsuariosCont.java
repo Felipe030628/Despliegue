@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import Controlador.CorreoUtil;
 
 @WebServlet(name = "UsuariosCont", urlPatterns = {"/UsuariosCont"})
 public class UsuariosCont extends HttpServlet {
@@ -34,18 +35,38 @@ public class UsuariosCont extends HttpServlet {
                 case "cargar":
                     int id = Integer.parseInt(request.getParameter("id"));
                     Usuarios usuario = dao.listarPorId(id);
-                    List<TiposDocumentos> listaTiposDoc = dao.listarTiposDocumentoMayores(); // Carga la lista filtrada con TiposDocumentos
+                    List<TiposDocumentos> listaTiposDoc = dao.listarTiposDocumentoMayores(); 
                     
                     request.setAttribute("usuario", usuario);
-                    request.setAttribute("listaTiposDoc", listaTiposDoc); // Envía la lista al JSP
+                    request.setAttribute("listaTiposDoc", listaTiposDoc); 
                     request.getRequestDispatcher("Vista/EditarEmpleado.jsp").forward(request, response);
                     break;
                     
-                    case "eliminar":
-                int idEliminar = Integer.parseInt(request.getParameter("id"));
-                dao.eliminar(idEliminar);
-                response.sendRedirect("UsuariosCont?accion=listar");
-                break;
+                case "eliminar":
+                    int idEliminar = Integer.parseInt(request.getParameter("id"));
+                    dao.eliminar(idEliminar);
+                    response.sendRedirect("UsuariosCont?accion=listar");
+                    break;
+                    
+                case "cambiarEstado":
+                    int idEstado = Integer.parseInt(request.getParameter("id"));
+                    int nuevoEstado = Integer.parseInt(request.getParameter("activo"));
+                    dao.cambiarEstado(idEstado, nuevoEstado);
+                    response.sendRedirect("UsuariosCont?accion=listar");
+                    break;
+                    
+                case "verificarCodigo":
+                    String correoV = (String) request.getSession().getAttribute("correoVerificar");
+                    String codigoIngresado = request.getParameter("txtcodigo");
+                    
+                    boolean valido = dao.validarYActivarCuenta(correoV, codigoIngresado);
+                    if (valido) {
+                        request.getSession().removeAttribute("correoVerificar");
+                        response.sendRedirect("Login.jsp?status=verificado");
+                    } else {
+                        response.sendRedirect("Vista/VerificarCodigo.jsp?status=error_codigo");
+                    }
+                    break;
             }
         } else {
             response.sendRedirect("Vista/Panel.jsp");
@@ -64,13 +85,13 @@ public class UsuariosCont extends HttpServlet {
                     String nombre = request.getParameter("txtnombre");
                     String apellido = request.getParameter("txtapellido");
                     String correo = request.getParameter("txtemail");
-                    String fechaNac = request.getParameter("txtfechaNacimiento");
-                    String numDoc = request.getParameter("txtnumDocumento");
-                    String telefono = request.getParameter("txttelefono");
+                    String fechaNac = request.getParameter("txtfechaNac");     
+                    String numDoc = request.getParameter("txtnumdoc");         
+                    String telefono = request.getParameter("txttel");          
                     String direccion = request.getParameter("txtdireccion");
                     String contrasena = request.getParameter("txtpass");
                     
-                    int idTipoDocumento = Integer.parseInt(request.getParameter("txttipoDocumento"));
+                    int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); 
                     int idRol = Integer.parseInt(request.getParameter("txtrol"));
                     
                     u.setNombre(nombre);
@@ -78,7 +99,7 @@ public class UsuariosCont extends HttpServlet {
                     u.setCorreo(correo);
                     u.setFecha_nacimiento(fechaNac);
                     u.setIdTipoDocumento(idTipoDocumento);
-                    u.setNombre_documento(numDoc); // Corregido a setNum_documento
+                    u.setNombre_documento(numDoc);
                     u.setTelefono(telefono);
                     u.setDireccion(direccion);
                     u.setIdRol(idRol);
@@ -87,7 +108,26 @@ public class UsuariosCont extends HttpServlet {
                     int res = dao.registrar(u);
                     
                     if (res > 0) {
-                        response.sendRedirect("Login.jsp?status=success");
+                        // 1. Generar un código aleatorio de 6 dígitos
+                        String codigoVerificacion = String.format("%06d", new java.util.Random().nextInt(999999));
+                        
+                        // 2. Guardarlo en la BD asociado al correo
+                        dao.actualizarCodigoVerificacion(correo, codigoVerificacion);
+                        
+                        // 3. Guardar el correo en sesión y enviar el correo en un hilo independiente (evita congelamientos)
+                        request.getSession().setAttribute("correoVerificar", correo);
+                        
+                        new Thread(() -> {
+                            try {
+                                CorreoUtil.enviarCorreo(correo, codigoVerificacion);
+                            } catch (Exception e) {
+                                System.out.println("Aviso: No se pudo enviar el correo de fondo: " + e.getMessage());
+                            }
+                        }).start();
+                        
+                        // 4. Redirigir de inmediato a la vista de verificación sin quedarse bloqueado
+                        response.sendRedirect("Vista/VerificarCodigo.jsp?status=enviado");
+                        
                     } else {
                         response.sendRedirect("Registro.jsp?status=error");
                     }
@@ -116,7 +156,7 @@ public class UsuariosCont extends HttpServlet {
                     usuAct.setCorreo(correo);
                     usuAct.setContrasena(contrasena);
                     usuAct.setIdTipoDocumento(idTipoDocumento);
-                    usuAct.setNombre_documento(num_documento); // Corregido a setNum_documento
+                    usuAct.setNombre_documento(num_documento);
                     usuAct.setTelefono(telefono);
                     usuAct.setDireccion(direccion);
                     usuAct.setIdRol(idRol);

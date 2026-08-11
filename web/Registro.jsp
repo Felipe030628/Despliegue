@@ -32,7 +32,7 @@
             </div>
         <% } %>
 
-        <form action="Registro" method="POST">
+        <form action="UsuariosCont" method="POST">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label-premium">Nombre</label>
@@ -59,7 +59,8 @@
                     <label class="form-label-premium">Tipo Documento</label>
                     <select name="txtIdTipoDoc" class="form-select form-control-premium">
                         <option value="1">Cédula de Ciudadanía</option>
-                        <option value="2">Tarjeta de Identidad</option>
+                        <option value="2">Pasaporte</option>
+                        <option value="3">PPT</option>
                     </select>
                 </div>
                 <div class="col-md-7 mb-3">

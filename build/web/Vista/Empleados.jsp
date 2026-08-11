@@ -80,6 +80,7 @@
                             <th>Correo</th>
                             <th>Documento</th>
                             <th>Rol</th>
+                            <th>Estado</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -95,24 +96,48 @@
                                         <td>
                                             <span class="badge bg-secondary">${u.idRol}</span>
                                         </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${u.activo == 1}">
+                                                    <span class="badge bg-success">Activo</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
                                         <td class="text-center">
-                            <!-- Botón de Editar -->
-                            <a href="${pageContext.request.contextPath}/UsuariosCont?accion=cargar&id=${u.idUsuarios}" class="btn btn-warning btn-sm">
-                                <i class="bi bi-pencil-fill"></i>
-                            </a>
-                                <a href="${pageContext.request.contextPath}/UsuariosCont?accion=eliminar&id=${u.idUsuarios}" 
-       class="btn btn-danger btn-sm" 
-       title="Eliminar"
-       onclick="return confirm('¿Estás seguro de que deseas eliminar al empleado ${u.nombre}?');">
-        <i class="bi bi-trash-fill"></i>
-    </a>
-                        </td>
+                                            <!-- Botón de Editar -->
+                                            <a href="${pageContext.request.contextPath}/UsuariosCont?accion=cargar&id=${u.idUsuarios}" class="btn btn-warning btn-sm" title="Editar">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                            
+                                            <!-- Botón de Activar / Inactivar (Baja lógica) -->
+                                            <c:choose>
+                                                <c:when test="${u.activo == 1}">
+                                                    <a href="${pageContext.request.contextPath}/UsuariosCont?accion=cambiarEstado&id=${u.idUsuarios}&activo=0" 
+                                                       class="btn btn-danger btn-sm" 
+                                                       title="Desactivar"
+                                                       onclick="return confirm('¿Estás seguro de desactivar a ${u.nombre}? Ya no podrá iniciar sesión.');">
+                                                        <i class="bi bi-toggle-on"></i>
+                                                    </a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a href="${pageContext.request.contextPath}/UsuariosCont?accion=cambiarEstado&id=${u.idUsuarios}&activo=1" 
+                                                       class="btn btn-success btn-sm" 
+                                                       title="Activar"
+                                                       onclick="return confirm('¿Deseas activar nuevamente a ${u.nombre}?');">
+                                                        <i class="bi bi-toggle-off"></i>
+                                                    </a>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </td>
                                     </tr>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
                                 <tr>
-                                    <td colspan="5" class="text-center">No hay empleados registrados.</td>
+                                    <td colspan="7" class="text-center">No hay empleados registrados.</td>
                                 </tr>
                             </c:otherwise>
                         </c:choose>

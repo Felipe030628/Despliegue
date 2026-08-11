@@ -7,18 +7,20 @@ import Modelo.Categorias;
 
 public class CategoriaDAO {
 
-    private String url = "jdbc:mysql://localhost:3307/barstock";
-    private String user = "root";
-    private String pass = "";
+    Conexion cn = new Conexion();
+    Connection con;
+    PreparedStatement ps;
+    ResultSet rs;
 
     // LISTAR (Todos los registros)
     public List<Categorias> listar() {
         List<Categorias> lista = new ArrayList<>();
         String sql = "SELECT * FROM categorias";
 
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try {
+            con = cn.Conexion(); // Usando la conexión centralizada de Railway
+            ps = con.prepareStatement(sql);
+            rs = ps.executeQuery();
 
             while (rs.next()) {
                 Categorias c = new Categorias();
@@ -27,7 +29,16 @@ public class CategoriaDAO {
                 lista.add(c);
             }
         } catch (Exception e) {
+            System.out.println("❌ Error al listar categorías: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                System.out.println("Error al cerrar recursos: " + ex.getMessage());
+            }
         }
         return lista;
     }

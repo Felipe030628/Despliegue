@@ -1,7 +1,7 @@
 package Controlador;
 
 import Modelo.Usuarios;
-import Modelo.TiposDocumentos; // Asegúrate de importar tu modelo de TipoDocumento correctamente
+import Modelo.TiposDocumentos;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,35 +16,26 @@ public class UsuariosDAO {
     ResultSet rs;
 
     // 1. Validar Login
- public Usuarios validarLogin(String correo, String password) {
+    public Usuarios validarLogin(String correo, String password) {
     Usuarios user = null;
-    String sql = "SELECT * FROM usuarios WHERE correo = ? AND password = ?";
+    // Quitamos temporalmente el filtro de estado para probar
+    String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ? AND estado_verificacion = 1";
     
     try {
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        String url = "jdbc:mysql://sakura.proxy.rlwy.net:24908/railway?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        
-        // Conexión directa dentro del mismo método para evitar nulos
-        java.sql.Connection conexionDirecta = java.sql.DriverManager.getConnection(url, "root", "aSZLfvKfJVnchDkGkHFWxnycCmAICyJU");
-        
-        java.sql.PreparedStatement ps = conexionDirecta.prepareStatement(sql);
+        con = cn.Conexion();
+        ps = con.prepareStatement(sql);
         ps.setString(1, correo);
         ps.setString(2, password);
-        java.sql.ResultSet rs = ps.executeQuery();
+        rs = ps.executeQuery();
         
         if (rs.next()) {
-            user = new Usuarios();
-            user.setIdUsuarios(rs.getInt("id"));
-            user.setCorreo(rs.getString("correo"));
-            user.setContrasena(rs.getString("password"));
+            user = mapearUsuario(rs);
         }
-        
-        rs.close();
-        ps.close();
-        conexionDirecta.close();
     } catch (Exception e) {
-        System.err.println("--- ERROR DIRECTO EN EL DAO ---");
+        System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
         e.printStackTrace();
+    } finally {
+        cerrarRecursos();
     }
     
     return user;
@@ -62,7 +53,7 @@ public class UsuariosDAO {
             ps.setString(3, u.getCorreo());
             ps.setString(4, u.getFecha_nacimiento());
             ps.setInt(5, u.getIdTipoDocumento());
-            ps.setString(6, u.getNombre_documento()); // CORREGIDO: Usando num_documento
+            ps.setString(6, u.getNombre_documento());
             ps.setString(7, u.getTelefono());
             ps.setString(8, u.getDireccion());
             ps.setString(9, u.getContrasena());
@@ -96,7 +87,7 @@ public class UsuariosDAO {
         return user;
     }
 
-    // Método privado para mapear datos (Evita duplicidad de código)
+    // Método privado para mapear datos
     private Usuarios mapearUsuario(ResultSet rs) throws Exception {
         Usuarios u = new Usuarios();
         u.setIdUsuarios(rs.getInt("idUsuarios"));
@@ -105,11 +96,17 @@ public class UsuariosDAO {
         u.setCorreo(rs.getString("correo"));
         u.setFecha_nacimiento(rs.getString("fecha_nacimiento"));
         u.setIdTipoDocumento(rs.getInt("idTipoDocumento"));
-        u.setNombre_documento(rs.getString("num_documento")); // CORREGIDO: Usando setNum_documento
+        u.setNombre_documento(rs.getString("num_documento"));
         u.setTelefono(rs.getString("telefono"));
         u.setDireccion(rs.getString("direccion"));
         u.setContrasena(rs.getString("contrasena"));
         u.setIdRol(rs.getInt("idRol"));
+        // Mapeamos también el campo activo por si la columna existe en la BD
+        try {
+            u.setActivo(rs.getInt("activo"));
+        } catch (Exception e) {
+            u.setActivo(1); // Valor por defecto si la columna viniera vacía temporalmente
+        }
         return u;
     }
 
@@ -173,7 +170,7 @@ public class UsuariosDAO {
             ps.setString(3, u.getCorreo());
             ps.setString(4, u.getContrasena());
             ps.setInt(5, u.getIdTipoDocumento());
-            ps.setString(6, u.getNombre_documento()); // CORREGIDO: Usando getNum_documento
+            ps.setString(6, u.getNombre_documento());
             ps.setString(7, u.getTelefono());
             ps.setString(8, u.getDireccion());
             ps.setInt(9, u.getIdRol());
@@ -186,7 +183,6 @@ public class UsuariosDAO {
         }
     }
     
-    // 7. Listar tipos de documento excluyendo la tarjeta de identidad (ID 2)
     // 7. Listar tipos de documento excluyendo la tarjeta de identidad (ID 2)
     public List<TiposDocumentos> listarTiposDocumentoMayores() {
         List<TiposDocumentos> lista = new ArrayList<>();
@@ -209,17 +205,86 @@ public class UsuariosDAO {
         return lista;
     }
     
+    // 8. Método para eliminación física (si lo requieres)
     public void eliminar(int id) {
-    String sql = "DELETE FROM usuarios WHERE idUsuarios = ?";
-    try {
-        con = cn.Conexion();
-        ps = con.prepareStatement(sql);
-        ps.setInt(1, id);
-        ps.executeUpdate();
-    } catch (Exception e) {
-        System.out.println("❌ Error al eliminar usuario: " + e.getMessage());
-    } finally {
-        cerrarRecursos();
+        String sql = "DELETE FROM usuarios WHERE idUsuarios = ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("❌ Error al eliminar usuario: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
     }
-}
+    
+    // 9. Cambiar Estado (Baja Lógica: Activo / Inactivo)
+    public boolean cambiarEstado(int id, int activo) {
+        boolean ok = false;
+        String sql = "UPDATE usuarios SET activo = ? WHERE idUsuarios = ?";
+        try {
+            con = cn.Conexion(); // Usando tu método de conexión estandarizado
+            ps = con.prepareStatement(sql);
+            ps.setInt(1, activo);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+            ok = true;
+        } catch (Exception e) {
+            System.out.println("❌ Error al cambiar estado: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            cerrarRecursos();
+        }
+        return ok;
+    }
+    public boolean actualizarCodigoVerificacion(String correo, String codigo) {
+        boolean actualizado = false;
+        String sql = "UPDATE usuarios SET codigo_verificacion = ? WHERE correo = ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setString(1, codigo);
+            ps.setString(2, correo);
+            ps.executeUpdate();
+            actualizado = true;
+        } catch (Exception e) {
+            System.out.println("❌ Error al actualizar código de verificación: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return actualizado;
+    }
+    
+    public boolean validarYActivarCuenta(String correo, String codigoIngresado) {
+        boolean verificado = false;
+        String sqlSelect = "SELECT codigo_verificacion FROM usuarios WHERE correo = ?";
+        String sqlUpdate = "UPDATE usuarios SET estado_verificacion = 1, codigo_verificacion = NULL WHERE correo = ?";
+        
+        try {
+            con = cn.Conexion();
+            // Primero validamos el código
+            ps = con.prepareStatement(sqlSelect);
+            ps.setString(1, correo);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                String codigoBD = rs.getString("codigo_verificacion");
+                if (codigoBD != null && codigoBD.equals(codigoIngresado)) {
+                    // Si coincide, actualizamos el estado a verificado
+                    PreparedStatement psUpdate = con.prepareStatement(sqlUpdate);
+                    psUpdate.setString(1, correo);
+                    psUpdate.executeUpdate();
+                    psUpdate.close();
+                    verificado = true;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al validar código: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return verificado;
+    }
 }
