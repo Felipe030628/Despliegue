@@ -3,19 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Servlet/Registro.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Servlet/Producto.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/web/Vista/Panel.jsp</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Controlador/Conexion.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/web/WEB-INF/web.xml</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Controlador/TipoDocumentosDAO.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Pruebas/PruebaConexion.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Servlet/ServletLogin.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Controlador/MovimientoStockDAO.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Controlador/UsuariosDAO.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/web/Registro.jsp</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/src/java/Controlador/ProductosDAO.java</file>
-            <file>file:/C:/Users/SofiaNuevo/Documents/NetBeansProjects/Barstock/web/Vista/Productos.jsp</file>
+            <file>file:/C:/Users/Aprendiz/Documents/Netbeans%20Projects/Barstock/src/java/Modelo/Usuarios.java</file>
+            <file>file:/C:/Users/Aprendiz/Documents/Netbeans%20Projects/Barstock/src/java/Controlador/CategoriaDAO.java</file>
+            <file>file:/C:/Users/Aprendiz/Documents/Netbeans%20Projects/Barstock/src/java/Controlador/MesaDAO.java</file>
+            <file>file:/C:/Users/Aprendiz/Documents/Netbeans%20Projects/Barstock/src/java/Controlador/Conexion.java</file>
+            <file>file:/C:/Users/Aprendiz/Documents/Netbeans%20Projects/Barstock/src/java/Servlet/ServletLogin.java</file>
+            <file>file:/C:/Users/Aprendiz/Documents/Netbeans%20Projects/Barstock/src/java/Controlador/UsuariosDAO.java</file>
         </group>
     </open-files>
 </project-private>
