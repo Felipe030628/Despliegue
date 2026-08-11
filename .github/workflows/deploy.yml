@@ -2,7 +2,7 @@ name: Build and Deploy Java app to Azure
 
 on:
   push:
-    branches: [ master ] # Cambia 'master' por 'main' si usas esa rama
+    branches: [ master ]
 
 jobs:
   build-and-deploy:
