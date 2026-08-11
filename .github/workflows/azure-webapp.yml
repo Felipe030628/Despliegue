@@ -23,9 +23,9 @@ jobs:
           java-version: "17"
 
       - name: Compilar proyecto NetBeans con Ant
-       run: ant -Dlibs.CopyLibs.classpath=lib/org-netbeans-modules-java-j2seproject-copylibstask.jar clean dist
+        run: ant -Dlibs.CopyLibs.classpath=lib/org-netbeans-modules-java-j2seproject-copylibstask.jar clean dist
 
-      - name: Publicar archivo WAR en Azure
+      - name: Publicar en Azure
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
