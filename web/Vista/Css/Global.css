@@ -1,175 +1,369 @@
 /* 1. IMPORTACIONES Y FUENTES */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
 
+/* ============================================================
+   BARSTOCK — TOKENS
+   Paleta de licorera de autor: negro cálido + oro + vino tinto.
+   ============================================================ */
 :root {
-    --gold: #c5a059;
-    --gold-hover: #e0b96f;
-    --bg-dark: #0a0a0a;
-    --bg-sidebar: #050505;
-    --bg-widget: #111111;
-    --border-dark: 1px solid #1a1a1a;
-    --border-gold: 1px solid #c5a059;
-    --text-muted: rgba(255, 255, 255, 0.5);
+    /* Superficies */
+    --void:            #0a0809;
+    --panel:           #131013;
+    --panel-alt:       #171316;
+    --panel-line:      rgba(201, 164, 77, 0.14);
+    --panel-line-soft: rgba(255, 255, 255, 0.06);
+
+    /* Acentos */
+    --gold:        #c9a24d;
+    --gold-soft:   #e6c789;
+    --gold-dim:    rgba(201, 164, 77, 0.28);
+    --wine:        #7c2432;
+    --wine-bright: #a13345;
+    --wine-dim:    rgba(124, 36, 50, 0.28);
+
+    /* Texto */
+    --ink:         #f3ede1;
+    --ink-muted:   rgba(243, 237, 225, 0.56);
+    --ink-faint:   rgba(243, 237, 225, 0.32);
+
+    /* Estado */
+    --success: #5b9d6f;
+    --danger:  #b23a48;
+
+    /* Otros */
+    --radius:    12px;
+    --radius-lg: 18px;
+    --ease: cubic-bezier(.22,.61,.36,1);
 }
+
+* { box-sizing: border-box; }
 
 body {
-    background-color: var(--bg-dark);
-    color: #ffffff;
-    font-family: 'Montserrat', sans-serif;
+    background-color: var(--void);
+    background-image:
+        radial-gradient(circle at 12% -10%, rgba(201,164,77,0.08), transparent 45%),
+        radial-gradient(circle at 100% 0%, rgba(124,36,50,0.10), transparent 40%),
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
     margin: 0;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* 2. ESTRUCTURA Y SIDEBAR */
+::selection { background: var(--gold-dim); color: var(--ink); }
+
+/* Scrollbar de autor */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: #241f24; border-radius: 10px; border: 2px solid var(--void); }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+/* ============================================================
+   2. ESTRUCTURA Y SIDEBAR
+   ============================================================ */
 .dashboard-container { display: flex; min-height: 100vh; }
 
 .sidebar {
-    width: 260px;
-    background-color: var(--bg-sidebar);
-    border-right: var(--border-dark);
-    padding: 30px 20px;
+    width: 272px;
+    flex-shrink: 0;
+    background:
+        linear-gradient(180deg, rgba(201,164,77,0.05) 0%, transparent 18%),
+        var(--void);
+    border-right: 1px solid var(--panel-line);
+    padding: 34px 18px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
-.sidebar-header { text-align: center; margin-bottom: 40px; }
-.sidebar-header h3 { font-family: 'Great Vibes', cursive; color: var(--gold); font-size: 2.2rem; margin: 0; }
-.sidebar-header p { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin: 0; }
-
-.sidebar-menu { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.sidebar-menu li a { 
-    display: flex; align-items: center; padding: 12px 15px; color: #ffffff; 
-    text-decoration: none; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;
-    border: 1px solid transparent; transition: all 0.3s ease; 
+.sidebar-header { text-align: center; margin-bottom: 36px; padding-bottom: 26px; position: relative; }
+.sidebar-header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 64px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
-.sidebar-menu li a:hover, .sidebar-menu li a.active { color: var(--gold); border: var(--border-gold); background-color: rgba(197, 160, 89, 0.05); }
+.sidebar-header h3 {
+    font-family: 'Great Vibes', cursive;
+    color: var(--gold-soft);
+    font-size: 2.5rem;
+    margin: 0;
+    line-height: 1;
+    text-shadow: 0 0 22px rgba(201,164,77,0.25);
+}
+.sidebar-header p {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.64rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--ink-faint);
+    margin: 6px 0 0;
+}
 
-/* 3. CONTENIDO PRINCIPAL Y CARDS */
-.main-content { flex: 1; padding: 25px 35px; overflow-y: auto; }
+.sidebar-eyebrow {
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 14px;
+    margin: 22px 0 10px;
+}
+.sidebar-eyebrow:first-of-type { margin-top: 0; }
+
+.sidebar-menu { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+
+.sidebar-menu li a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    border-radius: 9px;
+    border-left: 2px solid transparent;
+    transition: color .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease), padding-left .25s var(--ease);
+}
+.sidebar-menu li a i { font-size: 1rem; width: 18px; text-align: center; color: var(--gold-dim); transition: color .25s ease; }
+
+.sidebar-menu li a:hover { color: var(--ink); background-color: rgba(201,160,89,0.05); padding-left: 18px; }
+.sidebar-menu li a:hover i { color: var(--gold); }
+
+.sidebar-menu li a.active {
+    color: var(--gold-soft);
+    background: linear-gradient(90deg, rgba(201,164,77,0.12), transparent);
+    border-left: 2px solid var(--gold);
+    font-weight: 600;
+}
+.sidebar-menu li a.active i { color: var(--gold); }
+
+.sidebar-menu .dropdown-toggle::after {
+    content: '\f282';
+    font-family: 'bootstrap-icons';
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    transition: transform .25s var(--ease);
+}
+.sidebar-menu .dropdown-toggle[aria-expanded="true"]::after { transform: rotate(90deg); }
+
+.sidebar-menu ul.collapse,
+.sidebar-menu ul.collapsing {
+    list-style: none;
+    padding-left: 22px !important;
+    margin: 4px 0 4px 22px;
+    border-left: 1px solid var(--panel-line);
+    display: flex; flex-direction: column; gap: 2px;
+}
+.sidebar-menu ul.collapse li a,
+.sidebar-menu ul.collapsing li a { padding: 9px 12px; font-size: 0.78rem; }
+
+.logout-link { color: var(--ink-faint) !important; }
+.logout-link:hover { color: var(--wine-bright) !important; background-color: var(--wine-dim) !important; }
+.logout-link i { color: var(--ink-faint); }
+.logout-link:hover i { color: var(--wine-bright) !important; }
+
+/* ============================================================
+   3. CONTENIDO PRINCIPAL Y CARDS
+   ============================================================ */
+.main-content { flex: 1; padding: 32px 40px 60px; overflow-y: auto; max-width: 1400px; }
+
+.page-header { margin-bottom: 28px; }
+.page-header .eyebrow {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--gold); margin: 0 0 6px;
+}
+.page-header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 2rem;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: 0.2px;
+}
+.page-header p { color: var(--ink-muted); font-size: 0.88rem; margin: 6px 0 0; }
 
 .content-card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%), var(--bg-widget);
-    border: var(--border-dark);
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 60%), var(--panel);
+    border: 1px solid var(--panel-line-soft);
     border-top: 2px solid var(--gold);
-    padding: 30px;
-    margin-bottom: 25px;
-    border-radius: 14px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    padding: 30px 32px;
+    margin-bottom: 26px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    position: relative;
 }
+/* esquina firma: detalle de carta de autor */
+.content-card::before,
+.content-card::after {
+    content: '';
+    position: absolute; width: 16px; height: 16px;
+    border-color: var(--gold-dim);
+    opacity: .8;
+}
+.content-card::before { top: 10px; left: 10px; border-top: 1px solid; border-left: 1px solid; border-top-left-radius: 4px; }
+.content-card::after  { bottom: 10px; right: 10px; border-bottom: 1px solid; border-right: 1px solid; border-bottom-right-radius: 4px; }
 
 .content-card h5 {
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    color: #ffffff;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.2rem;
+    letter-spacing: 0.3px;
+    color: var(--ink);
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding-bottom: 16px;
-    margin-bottom: 24px !important;
-    border-bottom: 1px solid #1a1a1a;
+    gap: 12px;
+    padding-bottom: 18px;
+    margin-bottom: 26px !important;
+    border-bottom: 1px solid var(--panel-line);
+}
+.content-card h5::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 10px 2px var(--gold-dim);
+    flex-shrink: 0;
 }
 
-/* 4. ESTILOS PARA TABLAS Y FORMULARIOS (INTEGRACIÓN) */
-.table { color: white !important; vertical-align: middle; }
-.table thead { border-bottom: var(--border-gold); color: var(--gold); }
-.table-hover tbody tr:hover { background-color: rgba(197, 160, 89, 0.05); }
+/* ============================================================
+   4. TABLAS Y FORMULARIOS
+   ============================================================ */
+.table {
+    background-color: transparent !important;
+    color: var(--ink) !important;
+    border-color: var(--panel-line) !important;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+.table td, .table th { background-color: transparent !important; color: var(--ink) !important; border-color: var(--panel-line) !important; vertical-align: middle; padding: 14px 12px; }
 
-/* Etiquetas modernas: mayúsculas, doradas, tipo "premium" */
-.content-card form .form-label {
-    font-size: 0.72rem;
+.table thead {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--gold) !important;
+}
+.table thead th {
+    color: var(--gold) !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 1.2px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-bottom: none !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) { background-color: rgba(255,255,255,0.02) !important; }
+.table-hover > tbody > tr { transition: background-color .2s ease; }
+.table-hover > tbody > tr:hover { background-color: rgba(201,160,89,0.07) !important; }
+
+.content-card form .form-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
     color: var(--gold);
     margin-bottom: 8px;
+    font-family: 'Inter', sans-serif;
 }
 
 .form-control, .form-select {
-    background-color: #161616 !important;
-    border: 1px solid #262626 !important;
-    color: white !important;
+    background-color: var(--panel-alt) !important;
+    border: 1px solid #262128 !important;
+    color: var(--ink) !important;
     padding: 12px 14px;
     border-radius: 10px !important;
     font-size: 0.92rem;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    font-family: 'Inter', sans-serif;
+    transition: border-color .25s var(--ease), box-shadow .25s var(--ease), background-color .25s var(--ease);
 }
-.form-control::placeholder { color: rgba(255,255,255,0.35); }
-
-.form-control:hover, .form-select:hover { border-color: #3a3a3a !important; }
-
+.form-control::placeholder { color: var(--ink-faint); }
+.form-control:hover, .form-select:hover { border-color: #3a333c !important; }
 .form-control:focus, .form-select:focus {
     border-color: var(--gold) !important;
-    background-color: #1b1b1b !important;
-    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.15) !important;
+    background-color: #1b171c !important;
+    box-shadow: 0 0 0 3px var(--gold-dim) !important;
+    outline: none;
 }
-
 .form-select {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23c5a059' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23c9a24d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
     background-repeat: no-repeat;
     background-position: right 1rem center;
     background-size: 12px;
     appearance: none;
 }
 
+/* Botón principal dorado */
 .btn-gold {
     background-color: transparent;
-    border: var(--border-gold);
+    border: 1px solid var(--gold);
     color: var(--gold);
-    padding: 11px 22px;
+    padding: 12px 22px;
     border-radius: 10px;
     font-weight: 600;
+    font-size: 0.85rem;
     letter-spacing: 0.5px;
-    transition: all 0.3s ease;
+    transition: all .3s var(--ease);
 }
 .btn-gold:hover {
     background-color: var(--gold);
-    color: #0a0a0a;
+    color: var(--void);
     transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(197, 160, 89, 0.3);
+    box-shadow: 0 10px 22px rgba(201,164,77,0.28);
 }
 .btn-gold:active { transform: translateY(0); }
-/* --- CORRECCIÓN PARA TABLAS OSCURAS --- */
 
-/* 1. Elimina el fondo blanco de todas las tablas */
-.table {
-    background-color: transparent !important;
-    color: #ffffff !important;
-    border-color: #333 !important;
+/* Botones de acción de tabla — icono redondo, discreto y elegante */
+.table .btn,
+.btn-icon {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0;
+    font-size: 0.85rem;
+    transition: all .22s var(--ease);
 }
-
-/* 2. Asegura que las celdas sean transparentes */
-.table td, .table th {
-    background-color: transparent !important;
-    color: #ffffff !important;
-    border-color: #333 !important;
+.table .btn-warning,
+.btn-icon.edit {
+    background: rgba(201,164,77,0.08) !important;
+    border-color: var(--gold-dim) !important;
+    color: var(--gold-soft) !important;
 }
+.table .btn-warning:hover,
+.btn-icon.edit:hover { background: var(--gold) !important; color: var(--void) !important; border-color: var(--gold) !important; }
 
-/* 3. Estilo para las filas rayadas (zebra stripes) en modo oscuro */
-.table-striped > tbody > tr:nth-of-type(odd) {
-    background-color: rgba(255, 255, 255, 0.03) !important;
-    color: #ffffff !important;
-}
-
-/* 4. Efecto hover oscuro */
-.table-hover > tbody > tr:hover {
-    background-color: rgba(197, 160, 89, 0.1) !important;
-}
-
-/* 5. Estilo específico para el encabezado (thead) */
-.table thead {
-    background-color: var(--bg-widget) !important;
-    color: var(--gold) !important;
-    border-bottom: var(--border-gold) !important;
-}
-
+.table .btn-danger,
+.btn-icon.delete,
 .btn-eliminar {
-    background-color: #e74c3c; /* Rojo elegante */
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-block;
-    transition: background 0.3s ease;
+    background: rgba(124,36,50,0.10) !important;
+    border-color: rgba(161,51,69,0.35) !important;
+    color: var(--wine-bright) !important;
 }
+.table .btn-danger:hover,
+.btn-icon.delete:hover,
+.btn-eliminar:hover { background: var(--wine-bright) !important; color: var(--ink) !important; border-color: var(--wine-bright) !important; }
 
-.btn-eliminar:hover {
-    background-color: #c0392b; /* Rojo más oscuro al pasar el mouse */
+.table td:last-child { display: flex; gap: 8px; }
+
+/* Insignia de vencimiento (opcional, se activa agregando data-status) */
+.badge-venc {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.76rem; color: var(--ink-muted);
+}
+.badge-venc::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+.badge-venc[data-status="pronto"]::before { background: var(--gold); }
+.badge-venc[data-status="vencido"]::before { background: var(--danger); }
+
+/* Estado vacío */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--ink-faint); }
+.empty-state i { font-size: 2rem; color: var(--gold-dim); display: block; margin-bottom: 12px; }
+
+@media (max-width: 900px) {
+    .dashboard-container { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: relative; }
+    .main-content { padding: 24px; }
 }
