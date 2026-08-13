@@ -8,6 +8,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="Vista/Css/Registro.css">
 </head>
 <body>
@@ -16,6 +17,7 @@
         <div class="text-center">
             <h1 class="brand-title">BarStock</h1>
             <p class="brand-subtitle">Inventory Management</p>
+            <p class="register-lead">Crea tu cuenta de acceso al sistema</p>
         </div>
         
         <% 
@@ -24,77 +26,87 @@
             if (mensajeExito != null) { 
         %>
             <div class="alert alert-premium-success text-center" role="alert">
-                <%= mensajeExito %>
+                <i class="bi bi-check-circle-fill me-2"></i><%= mensajeExito %>
             </div>
         <% } if (mensajeError != null) { %>
             <div class="alert alert-premium-danger text-center" role="alert">
-                <%= mensajeError %>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><%= mensajeError %>
             </div>
         <% } %>
 
         <form action="UsuariosCont" method="POST">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label-premium">Nombre</label>
-                    <input type="text" name="txtnombre" class="form-control form-control-premium" required>
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-person-fill"></i> Datos Personales</div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label-premium">Nombre</label>
+                        <input type="text" name="txtnombre" class="form-control form-control-premium" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label-premium">Apellido</label>
+                        <input type="text" name="txtapellido" class="form-control form-control-premium" required>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label-premium">Apellido</label>
-                    <input type="text" name="txtapellido" class="form-control form-control-premium" required>
+
+                <div class="mb-3">
+                    <label class="form-label-premium">Correo Electrónico</label>
+                    <input type="email" name="txtemail" class="form-control form-control-premium" placeholder="usuario@barstock.com" required>
+                </div>
+
+                <div class="mb-0">
+                    <label class="form-label-premium">Fecha de Nacimiento</label>
+                    <input type="date" name="txtfechaNac" class="form-control form-control-premium" required>
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label-premium">Correo Electrónico</label>
-                <input type="email" name="txtemail" class="form-control form-control-premium" placeholder="usuario@barstock.com" required>
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-card-text"></i> Identificación y Contacto</div>
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label-premium">Tipo Documento</label>
+                        <select name="txtIdTipoDoc" class="form-select form-control-premium">
+                            <option value="1">Cédula de Ciudadanía</option>
+                            <option value="2">Pasaporte</option>
+                            <option value="3">PPT</option>
+                        </select>
+                    </div>
+                    <div class="col-md-7 mb-3">
+                        <label class="form-label-premium">Número de Documento</label>
+                        <input type="text" name="txtnumdoc" minlength="7" maxlength="20" class="form-control form-control-premium" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label class="form-label-premium">Teléfono</label>
+                        <input type="tel" name="txttel" minlength="7" maxlength="20" class="form-control form-control-premium" required>
+                    </div>
+                    <div class="col-md-7 mb-3">
+                        <label class="form-label-premium">Dirección de Residencia</label>
+                        <input type="text" name="txtdireccion" class="form-control form-control-premium">
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label-premium">Fecha de Nacimiento</label>
-                <input type="date" name="txtfechaNac" class="form-control form-control-premium" required>
-            </div>
-
-            <div class="row">
-                <div class="col-md-5 mb-3">
-                    <label class="form-label-premium">Tipo Documento</label>
-                    <select name="txtIdTipoDoc" class="form-select form-control-premium">
-                        <option value="1">Cédula de Ciudadanía</option>
-                        <option value="2">Pasaporte</option>
-                        <option value="3">PPT</option>
+            <div class="form-section">
+                <div class="form-section-title"><i class="bi bi-shield-lock-fill"></i> Acceso al Sistema</div>
+                <div class="mb-3">
+                    <label class="form-label-premium">Cargo en el Bar (Rol)</label>
+                    <select name="txtrol" class="form-select form-control-premium" required>
+                        <option value="1">Administrador (Control Total)</option>
+                        <option value="2">Mesero (Ventas y Pedidos)</option>
                     </select>
                 </div>
-                <div class="col-md-7 mb-3">
-                    <label class="form-label-premium">Número de Documento</label>
-                    <input type="text" name="txtnumdoc" minlength="7" maxlength="20" class="form-control form-control-premium" required>
-                </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-5 mb-3">
-                    <label class="form-label-premium">Teléfono</label>
-                    <input type="tel" name="txttel" minlength="7" maxlength="20" class="form-control form-control-premium" required>
+                <div class="mb-0">
+                    <label class="form-label-premium">Contraseña</label>
+                    <input type="password" name="txtpass" class="form-control form-control-premium" required>
                 </div>
-                <div class="col-md-7 mb-3">
-                    <label class="form-label-premium">Dirección de Residencia</label>
-                    <input type="text" name="txtdireccion" class="form-control form-control-premium">
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label-premium">Cargo en el Bar (Rol)</label>
-                <select name="txtrol" class="form-select form-control-premium" required>
-                    <option value="1">Administrador (Control Total)</option>
-                    <option value="2">Mesero (Ventas y Pedidos)</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label-premium">Contraseña</label>
-                <input type="password" name="txtpass" class="form-control form-control-premium" required>
             </div>
 
             <button type="submit" name="accion" value="Registrar" class="btn-gold-premium">
-                Registrar Usuario
+                <i class="bi bi-person-check-fill me-2"></i>Registrar Usuario
             </button>
             
             <div class="text-center">

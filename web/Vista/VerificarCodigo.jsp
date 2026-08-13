@@ -1,23 +1,32 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html>
+<html lang="es">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Verificar Código - BarStock</title>
-        <link rel="stylesheet" href="Css/Styles.css"> <!-- O tus estilos -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verificar Código | BarStock</title>
+        <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="Css/VerificarCodigo.css">
     </head>
-    <body style="font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4;">
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); width: 350px; text-align: center;">
-            <h2>Verificación de Cuenta</h2>
-            <p style="color: #666; font-size: 14px;">Hemos enviado un código de 6 dígitos a tu correo electrónico.</p>
-            
+    <body>
+        <div class="verify-card">
+            <i class="bi bi-envelope-paper-heart verify-icon"></i>
+            <h1 class="brand-title">BarStock</h1>
+            <h2 class="verify-title">Verificación de Cuenta</h2>
+            <p class="verify-copy">Hemos enviado un código de 6 dígitos a tu correo electrónico.</p>
+
             <form action="../UsuariosCont" method="GET">
                 <input type="hidden" name="accion" value="verificarCodigo">
-                <div style="margin-bottom: 15px;">
-                    <input type="text" name="txtcodigo" placeholder="Ingresa el código" required maxlength="6" style="padding: 10px; width: 80%; font-size: 18px; text-align: center; letter-spacing: 3px;">
+                <div class="code-input-wrap">
+                    <input type="text" name="txtcodigo" placeholder="------" required maxlength="6" autocomplete="one-time-code" inputmode="numeric">
                 </div>
-                <button type="submit" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px;">Verificar Cuenta</button>
+                <button type="submit" class="btn-gold">Verificar Cuenta</button>
             </form>
+
+            <div class="footer-links">
+                <a href="../Login.jsp">Volver al <span class="gold-span">inicio de sesión</span></a>
+            </div>
         </div>
     </body>
 </html>
