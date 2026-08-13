@@ -15,31 +15,30 @@ public class UsuariosDAO {
     PreparedStatement ps;
     ResultSet rs;
 
-    // 1. Validar Login
+    // 1. Validar Login (Actualizado para validar contra el campo activo si lo requieres, o sin columnas inexistentes)
     public Usuarios validarLogin(String correo, String password) {
-    Usuarios user = null;
-    // Quitamos temporalmente el filtro de estado para probar
-    String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ? AND estado_verificacion = 1";
+        Usuarios user = null;
+        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
     
-    try {
-        con = cn.Conexion();
-        ps = con.prepareStatement(sql);
-        ps.setString(1, correo);
-        ps.setString(2, password);
-        rs = ps.executeQuery();
-        
-        if (rs.next()) {
-            user = mapearUsuario(rs);
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setString(1, correo);
+            ps.setString(2, password);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                user = mapearUsuario(rs);
+            }
+        } catch (Exception e) {
+            System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            cerrarRecursos();
         }
-    } catch (Exception e) {
-        System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
-        e.printStackTrace();
-    } finally {
-        cerrarRecursos();
-    }
     
-    return user;
-}
+        return user;
+    }
 
     // 2. Registrar Usuario
     public int registrar(Usuarios u) {
@@ -101,11 +100,11 @@ public class UsuariosDAO {
         u.setDireccion(rs.getString("direccion"));
         u.setContrasena(rs.getString("contrasena"));
         u.setIdRol(rs.getInt("idRol"));
-        // Mapeamos también el campo activo por si la columna existe en la BD
+        
         try {
             u.setActivo(rs.getInt("activo"));
         } catch (Exception e) {
-            u.setActivo(1); // Valor por defecto si la columna viniera vacía temporalmente
+            u.setActivo(1); 
         }
         return u;
     }
@@ -205,7 +204,7 @@ public class UsuariosDAO {
         return lista;
     }
     
-    // 8. Método para eliminación física (si lo requieres)
+    // 8. Método para eliminación física
     public void eliminar(int id) {
         String sql = "DELETE FROM usuarios WHERE idUsuarios = ?";
         try {
@@ -225,7 +224,7 @@ public class UsuariosDAO {
         boolean ok = false;
         String sql = "UPDATE usuarios SET activo = ? WHERE idUsuarios = ?";
         try {
-            con = cn.Conexion(); // Usando tu método de conexión estandarizado
+            con = cn.Conexion();
             ps = con.prepareStatement(sql);
             ps.setInt(1, activo);
             ps.setInt(2, id);
@@ -239,6 +238,7 @@ public class UsuariosDAO {
         }
         return ok;
     }
+
     public boolean actualizarCodigoVerificacion(String correo, String codigo) {
         boolean actualizado = false;
         String sql = "UPDATE usuarios SET codigo_verificacion = ? WHERE correo = ?";
@@ -260,11 +260,11 @@ public class UsuariosDAO {
     public boolean validarYActivarCuenta(String correo, String codigoIngresado) {
         boolean verificado = false;
         String sqlSelect = "SELECT codigo_verificacion FROM usuarios WHERE correo = ?";
-        String sqlUpdate = "UPDATE usuarios SET estado_verificacion = 1, codigo_verificacion = NULL WHERE correo = ?";
+        // Corregido: Se actualiza el campo 'activo = 1' en lugar de la columna eliminada 'estado_verificacion'
+        String sqlUpdate = "UPDATE usuarios SET activo = 1, codigo_verificacion = NULL WHERE correo = ?";
         
         try {
             con = cn.Conexion();
-            // Primero validamos el código
             ps = con.prepareStatement(sqlSelect);
             ps.setString(1, correo);
             rs = ps.executeQuery();
@@ -272,7 +272,6 @@ public class UsuariosDAO {
             if (rs.next()) {
                 String codigoBD = rs.getString("codigo_verificacion");
                 if (codigoBD != null && codigoBD.equals(codigoIngresado)) {
-                    // Si coincide, actualizamos el estado a verificado
                     PreparedStatement psUpdate = con.prepareStatement(sqlUpdate);
                     psUpdate.setString(1, correo);
                     psUpdate.executeUpdate();

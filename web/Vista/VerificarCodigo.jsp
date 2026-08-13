@@ -4,7 +4,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Verificar Código - BarStock</title>
-        <link rel="stylesheet" href="Css/Styles.css"> <!-- O tus estilos -->
+        <link rel="stylesheet" href="Css/VerificarCodigo.css"> <!-- O tus estilos -->
     </head>
     <body style="font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4;">
         <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); width: 350px; text-align: center;">
