@@ -5,28 +5,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Control | BarStock</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Panel.css">
 </head>
 <body>
 
+    <!-- PANTALLA DE CARGA -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <h1 class="loading-logo">BarStock</h1>
+            <div class="loading-glass">
+                <div class="loading-bubble"></div>
+                <div class="loading-bubble"></div>
+                <div class="loading-bubble"></div>
+                <div class="loading-liquid"></div>
+            </div>
+            <p class="loading-text">Sirviendo tu inventario<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
+        </div>
+    </div>
+
     <div class="dashboard-container">
-        
+
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h3>BarStock</h3>
                 <p>Inventario Inteligente</p>
             </div>
-            
+
             <ul class="sidebar-menu">
                 <li>
-                    <a href="Panel.jsp"><i class="bi bi-sliders me-2"></i> Dashboard</a>
+                    <a href="Panel.jsp" class="active"><i class="bi bi-sliders me-2"></i> Dashboard</a>
                 </li>
 
                 <li class="nav-item dropdown">
@@ -70,7 +84,7 @@
         </aside>
 
         <main class="main-content">
-            
+
             <header class="top-navbar">
                 <div class="search-box">
                     <i class="bi bi-search"></i>
@@ -188,7 +202,7 @@
                     <div class="dashboard-widget">
                         <div class="widget-header d-flex justify-content-between align-items-center">
                             <h5>Más Solicitados (Top)</h5>
-                            <a href="${pageContext.request.contextPath}/Vista/Inventario.jsp" class="btn btn-sm btn-outline-warning" style="font-size: 0.65rem; border-color: var(--gold); color: var(--gold);">
+                            <a href="${pageContext.request.contextPath}/Vista/Inventario.jsp" class="btn btn-sm btn-outline-warning" style="font-size: 0.65rem;">
                                 Ver Todo
                             </a>
                         </div>
@@ -223,11 +237,32 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="${pageContext.request.contextPath}/Vista/JavaScript/Panel.js"></script>
-    
+
     <script>
+        // ---- Pantalla de carga: se oculta cuando el panel ya está listo ----
+        (function () {
+            var loader = document.getElementById('loadingScreen');
+            var TIEMPO_MINIMO = 2600; // ms — deja ver la copa llenarse completa
+            var inicio = Date.now();
+
+            function ocultarLoader() {
+                var transcurrido = Date.now() - inicio;
+                var espera = Math.max(TIEMPO_MINIMO - transcurrido, 0);
+                setTimeout(function () {
+                    loader.classList.add('is-hidden');
+                    setTimeout(function () { loader.remove(); }, 750);
+                }, espera);
+            }
+
+            if (document.readyState === 'complete') {
+                ocultarLoader();
+            } else {
+                window.addEventListener('load', ocultarLoader);
+            }
+        })();
+
         document.addEventListener("DOMContentLoaded", function() {
-        // La línea del alert ya no está aquí
-        
+
         function cargarDatos() {
             fetch('${pageContext.request.contextPath}/DashboardData?t=' + Date.now())
                 .then(r => r.json())
@@ -238,7 +273,7 @@
                 })
                 .catch(e => console.error('Error:', e));
         }
-        
+
         cargarDatos();
         setInterval(cargarDatos, 5000);
     });
