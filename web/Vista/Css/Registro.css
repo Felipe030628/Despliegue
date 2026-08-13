@@ -1,200 +1,138 @@
-/* =========================================================
-   BARSTOCK — REGISTRO / DISEÑO MODERNO
-   Solo estilos: nombres, acciones y campos permanecen intactos.
-   ========================================================= */
-
-:root {
-    --gold: #c5a059;
-    --gold-light: #d9b875;
-    --dark: #080808;
-    --card: #121212;
-    --input: #1a1a1a;
-    --line: rgba(197,160,89,.20);
-    --muted: #8f8f8f;
-}
-
-* { box-sizing: border-box; }
+/* ==========================================================================
+   Estilos Premium Lounge (Idéntico al Login con nuevos campos) - BarStock 
+   ========================================================================== */
 
 body {
     font-family: 'Montserrat', sans-serif;
-    background:
-        radial-gradient(circle at 10% 10%, rgba(197,160,89,.08), transparent 25%),
-        radial-gradient(circle at 90% 90%, rgba(197,160,89,.06), transparent 28%),
-        linear-gradient(135deg, #070707, #0d0d0d 55%, #080808);
+    background-color: #0d0d0d; /* Fondo oscuro puro idéntico al Login */
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0;
-    padding: 38px 20px;
-    color: #fff;
+    padding: 40px 20px; /* Un poco más de aire arriba y abajo para scrolling suave */
 }
 
+/* Tarjeta contenedora idéntica a la de Login */
 .register-container {
-    position: relative;
-    background: linear-gradient(145deg, rgba(28,28,28,.97), rgba(14,14,14,.98));
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 2.8rem 2.8rem 2.4rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%), #1a1a1a;
+    border: 1px solid #262626;
+    border-top: 1px solid rgba(205, 166, 97, 0.5);
+    border-radius: 18px;
+    padding: 3rem 2.5rem;
     width: 100%;
-    max-width: 620px;
-    box-shadow: 0 30px 80px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.035);
-    overflow: hidden;
+    max-width: 580px; /* Ajuste milimétrico para balancear las nuevas columnas */
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
 }
 
-.register-container::before {
-    content: "";
-    position: absolute;
-    left: 10%;
-    right: 10%;
-    top: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-}
-
-.register-container::after {
-    content: "";
-    position: absolute;
-    width: 240px;
-    height: 240px;
-    border-radius: 50%;
-    background: rgba(197,160,89,.055);
-    filter: blur(50px);
-    right: -150px;
-    top: -160px;
-    pointer-events: none;
-}
-
+/* Tipografía de marca corporativa */
 .brand-title {
     font-family: 'Great Vibes', cursive;
-    color: var(--gold-light);
-    font-size: 3.9rem;
-    line-height: 1;
-    margin: 0 0 .35rem;
-    text-shadow: 0 0 28px rgba(197,160,89,.15);
+    color: #cda661; /* Dorado mate idéntico */
+    font-size: 3.5rem;
+    margin-bottom: 0.2rem;
 }
 
 .brand-subtitle {
-    font-size: .68rem;
-    letter-spacing: 4px;
-    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: #8c8c8c;
     text-transform: uppercase;
     font-weight: 400;
-    margin-bottom: 2.4rem;
+    margin-bottom: 2.5rem;
 }
 
+/* Etiquetas del formulario (Mayúsculas, doradas y negrita) */
 .form-label-premium {
-    font-size: .68rem;
-    letter-spacing: 1.35px;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    color: #d4b375;
+    color: #cda661;
     font-weight: 700;
-    margin: 0 0 .5rem .15rem;
+    margin-bottom: 0.5rem;
     display: block;
 }
 
+/* Campos de entrada idénticos al Login */
 .form-control-premium {
-    background-color: rgba(255,255,255,.035) !important;
-    border: 1px solid #303030 !important;
-    color: #fff !important;
-    font-size: .88rem;
-    min-height: 50px;
-    padding: .75rem .95rem;
+    background-color: #202020 !important;
+    border: 1px solid #2e2e2e !important;
+    color: #ffffff !important;
+    font-size: 0.95rem;
+    padding: 0.85rem 1rem;
     border-radius: 10px;
-    transition: .3s ease;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+    transition: all 0.3s ease;
 }
 
-.form-control-premium::placeholder { color: #666; }
-
-.form-control-premium:hover {
-    border-color: rgba(197,160,89,.4) !important;
-    background-color: rgba(255,255,255,.045) !important;
-}
+.form-control-premium:hover { border-color: #3d3d3d !important; }
 
 .form-control-premium:focus {
-    border-color: var(--gold) !important;
-    box-shadow: 0 0 0 3px rgba(197,160,89,.09), 0 8px 20px rgba(0,0,0,.18) !important;
-    background-color: rgba(197,160,89,.035) !important;
+    border-color: #cda661 !important;
+    box-shadow: 0 0 0 3px rgba(205, 166, 97, 0.15) !important;
+    background-color: #242424 !important;
 }
 
+/* Modificación de flechas de los select nativos para acoplarse al color de la app */
 select.form-control-premium {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23c5a059' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cda661' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 1rem center;
     background-size: 10px;
     appearance: none;
-    padding-right: 2.4rem;
 }
 
-select.form-control-premium option {
-    background: #171717;
-    color: #fff;
-}
-
+/* Botón "ENTRAR AL SISTEMA" / "REGISTRAR USUARIO" */
 .btn-gold-premium {
-    position: relative;
-    background: linear-gradient(135deg, #c5a059, #d9b875) !important;
+    background-color: #cda661 !important;
     color: #0d0d0d !important;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1.7px;
-    font-size: .82rem;
-    min-height: 52px;
-    padding: .9rem 1rem;
+    letter-spacing: 1.5px;
+    font-size: 0.9rem;
+    padding: 1rem;
     border-radius: 10px;
     border: none;
     width: 100%;
-    margin-top: .6rem;
-    transition: .3s ease;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
     cursor: pointer;
-    overflow: hidden;
 }
 
 .btn-gold-premium:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(197,160,89,.24);
-    background: linear-gradient(135deg, #d2ad69, #e0bd7b) !important;
+    background-color: #d9b87a !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(205, 166, 97, 0.35);
 }
+.btn-gold-premium:active { transform: translateY(-1px); }
 
+/* Enlaces del pie de la tarjeta */
 .link-footer {
-    font-size: .8rem;
-    color: var(--muted);
+    font-size: 0.85rem;
+    color: #8c8c8c;
     text-decoration: none;
-    margin-top: 1.45rem;
+    margin-top: 1.5rem;
     display: inline-block;
-    transition: .25s ease;
 }
-
-.link-footer:hover { color: #fff; }
 
 .link-footer span {
-    color: var(--gold-light);
+    color: #cda661;
     font-weight: 600;
 }
-
-.alert-premium-success,
-.alert-premium-danger {
-    font-size: .78rem;
-    border-radius: 10px;
-    letter-spacing: .35px;
-    padding: .75rem 1rem;
-}
-
+/* Estilos personalizados para alertas en entornos oscuros */
 .alert-premium-success {
-    background-color: rgba(25,135,84,.13) !important;
-    border: 1px solid rgba(25,135,84,.65) !important;
-    color: #62e6ac !important;
+    background-color: rgba(25, 135, 84, 0.2) !important;
+    border: 1px solid #198754 !important;
+    color: #4df3a5 !important;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
 }
 
 .alert-premium-danger {
-    background-color: rgba(220,53,69,.12) !important;
-    border: 1px solid rgba(220,53,69,.65) !important;
-    color: #ff7f8b !important;
-}
-
-@media (max-width: 600px) {
-    body { padding: 22px 14px; }
-    .register-container { padding: 2.4rem 1.35rem 2rem; border-radius: 20px; }
-    .brand-title { font-size: 3.5rem; }
+    background-color: rgba(220, 53, 69, 0.2) !important;
+    border: 1px solid #dc3545 !important;
+    color: #ff7685 !important;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
 }
