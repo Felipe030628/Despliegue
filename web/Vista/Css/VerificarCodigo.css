@@ -1,7 +1,6 @@
-/* Verificación de código - misma paleta que Login/Registro */
+/* Variables de color BarStock */
 :root {
     --gold: #c5a059;
-    --gold-hover: #d4b375;
     --dark-deep: #0d0d0d;
     --dark-card: #1a1a1a;
     --text-gray: #a0a0a0;
@@ -9,19 +8,18 @@
 
 body {
     background-color: var(--dark-deep);
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Montserrat', sans-serif;
     margin: 0;
     color: white;
-    padding: 24px;
 }
 
 .verify-card {
     background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%), var(--dark-card);
-    padding: 3rem 2.5rem;
+    padding: 3rem;
     border-radius: 16px;
     border: 1px solid rgba(197, 160, 89, 0.2);
     border-top: 1px solid rgba(197, 160, 89, 0.5);
@@ -31,40 +29,86 @@ body {
     text-align: center;
 }
 
-.verify-icon {
-    color: var(--gold);
-    font-size: 2rem;
-    margin-bottom: 0.6rem;
-    display: inline-block;
-}
-
 .brand-title {
     font-family: 'Great Vibes', cursive;
     color: var(--gold);
-    font-size: 2.6rem;
-    margin: 0 0 1.2rem 0;
-    line-height: 1;
+    font-size: 4rem;
+    margin-bottom: 0.2rem;
 }
 
-.verify-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 0.6rem 0;
+.subtitle {
+    color: var(--text-gray);
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    display: block;
 }
 
-.verify-copy {
+/* Icono de sobre */
+.verify-icon {
+    width: 64px;
+    height: 64px;
+    margin: 1rem auto 1.5rem;
+    border-radius: 50%;
+    background: rgba(197, 160, 89, 0.1);
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.verify-text {
     color: var(--text-gray);
     font-size: 0.85rem;
     line-height: 1.5;
     margin-bottom: 2rem;
 }
 
-.code-input-wrap {
-    margin-bottom: 1.6rem;
+/* Alertas */
+.error-toast {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    color: #ff808b;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.4s ease;
 }
 
-.code-input-wrap input {
+.success-toast {
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid #28a745;
+    color: #7ce495;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.input-group-custom {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
+.input-group-custom label {
+    display: block;
+    color: var(--gold);
+    font-size: 0.8rem;
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.codigo-input {
     width: 100%;
     background: #202020;
     border: 1px solid #2e2e2e;
@@ -73,20 +117,15 @@ body {
     border-radius: 10px;
     box-sizing: border-box;
     transition: all 0.3s ease;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     text-align: center;
     letter-spacing: 10px;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.code-input-wrap input::placeholder {
-    color: rgba(255,255,255,0.2);
-    letter-spacing: 10px;
-}
+.codigo-input:hover { border-color: #3d3d3d; }
 
-.code-input-wrap input:hover { border-color: #3d3d3d; }
-
-.code-input-wrap input:focus {
+.codigo-input:focus {
     border-color: var(--gold);
     outline: none;
     background: #242424;
@@ -105,11 +144,11 @@ body {
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 0.85rem;
+    margin-top: 0.5rem;
 }
 
 .btn-gold:hover {
-    background: var(--gold-hover);
+    background: #d4b375;
     transform: translateY(-3px);
     box-shadow: 0 10px 25px rgba(197, 160, 89, 0.4);
 }
