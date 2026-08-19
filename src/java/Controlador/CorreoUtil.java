@@ -14,8 +14,8 @@ public class CorreoUtil {
         System.out.println(" 🔑 CÓDIGO DE VERIFICACIÓN: " + codigo);
         System.out.println("==================================================");
 
-        final String remitente = "tucorreo@gmail.com";
-        final String password = "tu_contraseña_de_aplicacion"; 
+        final String remitente = "barstocks.a.s@gmail.com";
+        final String password = "tnaccwnefdzehmme"; 
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
