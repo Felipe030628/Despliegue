@@ -90,7 +90,23 @@ public class UsuariosCont extends HttpServlet {
                     String telefono = request.getParameter("txttel");          
                     String direccion = request.getParameter("txtdireccion");
                     String contrasena = request.getParameter("txtpass");
-                    
+                    String contrasenaConfirm = request.getParameter("txtpassConfirm");
+                    String terminos = request.getParameter("txtterminos");
+
+                    // Validación de contraseña y aceptación de términos (defensa en servidor)
+                    if (contrasena == null || contrasena.length() < 8) {
+                        response.sendRedirect("Registro.jsp?status=error_pass_corta");
+                        return;
+                    }
+                    if (contrasenaConfirm == null || !contrasena.equals(contrasenaConfirm)) {
+                        response.sendRedirect("Registro.jsp?status=error_pass_no_coincide");
+                        return;
+                    }
+                    if (terminos == null) {
+                        response.sendRedirect("Registro.jsp?status=error_terminos");
+                        return;
+                    }
+
                     int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); 
                     int idRol = Integer.parseInt(request.getParameter("txtrol"));
                     

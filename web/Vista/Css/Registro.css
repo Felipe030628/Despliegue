@@ -118,6 +118,159 @@ select.form-control-premium {
     color: #cda661;
     font-weight: 600;
 }
+/* ==========================================================================
+   Campo de contraseña con botón mostrar/ocultar
+   ========================================================================== */
+.input-group-premium {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-group-premium .form-control-premium {
+    width: 100%;
+    padding-right: 3rem;
+}
+
+.btn-toggle-pass {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: #8c8c8c;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.btn-toggle-pass:hover { color: #cda661; }
+
+/* ==========================================================================
+   Medidor de seguridad de la contraseña
+   ========================================================================== */
+.password-strength-meter {
+    width: 100%;
+    height: 5px;
+    background-color: #2e2e2e;
+    border-radius: 4px;
+    margin-top: 0.6rem;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-text {
+    display: block;
+    font-size: 0.75rem;
+    color: #8c8c8c;
+    margin-top: 0.4rem;
+    letter-spacing: 0.3px;
+}
+
+.input-error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2) !important;
+}
+
+/* ==========================================================================
+   Checkbox de Términos y Condiciones
+   ========================================================================== */
+.form-check-premium {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding-left: 0;
+}
+
+.form-check-input-premium {
+    width: 1.1rem;
+    height: 1.1rem;
+    min-width: 1.1rem;
+    margin-top: 0.15rem;
+    background-color: #202020;
+    border: 1px solid #3d3d3d;
+    border-radius: 4px;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.form-check-input-premium:checked {
+    background-color: #cda661;
+    border-color: #cda661;
+}
+
+.form-check-input-premium:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #0d0d0d;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.form-check-label-premium {
+    font-size: 0.82rem;
+    color: #c7c7c7;
+    line-height: 1.4;
+}
+
+.terms-link {
+    color: #cda661;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.terms-link:hover { text-decoration: underline; }
+
+/* ==========================================================================
+   Modal de Términos y Condiciones
+   ========================================================================== */
+.modal-content-premium {
+    background-color: #1a1a1a;
+    border: 1px solid #262626;
+    border-top: 1px solid rgba(205, 166, 97, 0.5);
+    color: #e0e0e0;
+    border-radius: 14px;
+}
+
+.modal-content-premium .modal-header,
+.modal-content-premium .modal-footer {
+    border-color: #262626;
+}
+
+.modal-content-premium .modal-title {
+    color: #cda661;
+    font-weight: 700;
+}
+
+.modal-content-premium .modal-body p {
+    font-size: 0.9rem;
+    color: #c7c7c7;
+    line-height: 1.6;
+}
+
+.modal-content-premium .modal-body strong {
+    color: #cda661;
+}
+
+.modal-btn-close {
+    width: auto;
+    padding: 0.6rem 1.5rem;
+    margin-top: 0;
+}
+
 /* Estilos personalizados para alertas en entornos oscuros */
 .alert-premium-success {
     background-color: rgba(25, 135, 84, 0.2) !important;
