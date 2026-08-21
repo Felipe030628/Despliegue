@@ -2,7 +2,9 @@ package Controlador;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import Modelo.Productos;
 
 public class ProductosDAO {
@@ -123,6 +125,34 @@ public class ProductosDAO {
             cerrarRecursos();
         }
         return total;
+    }
+
+    // Distribución real de productos por categoría (para la dona y las barras del Panel)
+    // Devuelve una lista ordenada de mayor a menor con el nombre de la categoría y
+    // cuántos productos tiene registrados esa categoría en este momento.
+    public List<Map<String, Object>> obtenerDistribucionCategorias() {
+        List<Map<String, Object>> lista = new ArrayList<>();
+        String sql = "SELECT c.nombre_categoria AS categoria, COUNT(p.idProductos) AS total "
+                + "FROM categorias c "
+                + "LEFT JOIN productos p ON p.categorias_idCategorias = c.idCategorias "
+                + "GROUP BY c.idCategorias, c.nombre_categoria "
+                + "ORDER BY total DESC";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> fila = new LinkedHashMap<>();
+                fila.put("categoria", rs.getString("categoria"));
+                fila.put("total", rs.getInt("total"));
+                lista.add(fila);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error en obtenerDistribucionCategorias: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return lista;
     }
 
     // Método para cerrar recursos de forma segura

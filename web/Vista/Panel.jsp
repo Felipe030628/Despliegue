@@ -163,26 +163,9 @@
                         <div class="widget-header">
                             <h5>Rendimiento de Categorías</h5>
                         </div>
-                        <div class="progress-group mb-3">
-                            <div class="d-flex justify-content-between font-size-sm mb-1">
-                                <span>Aguardientes</span>
-                                <span class="gold-text">75%</span>
-                            </div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 75%;"></div></div>
-                        </div>
-                        <div class="progress-group mb-3">
-                            <div class="d-flex justify-content-between font-size-sm mb-1">
-                                <span>Rones</span>
-                                <span class="gold-text">55%</span>
-                            </div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 55%;"></div></div>
-                        </div>
-                        <div class="progress-group">
-                            <div class="d-flex justify-content-between font-size-sm mb-1">
-                                <span>Cervezas Premium</span>
-                                <span class="gold-text">30%</span>
-                            </div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 30%;"></div></div>
+                        <!-- Se llena dinámicamente desde DashboardData (distribución real por categoría) -->
+                        <div id="categoriasProgress">
+                            <p class="text-muted small mb-0">Cargando categorías...</p>
                         </div>
                     </div>
                 </div>
@@ -206,27 +189,9 @@
                                 Ver Todo
                             </a>
                         </div>
-                        <ul class="premium-list-items">
-                            <li>
-                                <div class="d-flex align-items-center gap-3">
-                                    <span class="rank-number">1</span>
-                                    <div>
-                                        <p class="m-0 item-main-text">Antioque&ntilde;o 750ml</p>
-                                        <small class="text-muted">34 Ventas hoy</small>
-                                    </div>
-                                </div>
-                                <span class="badge-price">$45k</span>
-                            </li>
-                            <li>
-                                <div class="d-flex align-items-center gap-3">
-                                    <span class="rank-number">2</span>
-                                    <div>
-                                        <p class="m-0 item-main-text">Ron Medell&iacute;n 3 A&ntilde;os</p>
-                                        <small class="text-muted">19 Ventas hoy</small>
-                                    </div>
-                                </div>
-                                <span class="badge-price">$52k</span>
-                            </li>
+                        <!-- Se llena dinámicamente desde DashboardData (top real por salidas de stock) -->
+                        <ul class="premium-list-items" id="topProductosList">
+                            <li><small class="text-muted">Cargando productos...</small></li>
                         </ul>
                     </div>
                 </div>
@@ -236,6 +201,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Context path del proyecto, expuesto para que Panel.js (archivo externo)
+        // pueda armar la URL del servlet sin necesitar EL/JSP.
+        window.APP_CONTEXT_PATH = '${pageContext.request.contextPath}';
+    </script>
     <script src="${pageContext.request.contextPath}/Vista/JavaScript/Panel.js"></script>
 
     <script>
@@ -260,23 +231,6 @@
                 window.addEventListener('load', ocultarLoader);
             }
         })();
-
-        document.addEventListener("DOMContentLoaded", function() {
-
-        function cargarDatos() {
-            fetch('${pageContext.request.contextPath}/DashboardData?t=' + Date.now())
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById('variedad-stock').innerText = d.variedad + ' Marcas';
-                    document.getElementById('stock-critico').innerText = d.critico + ' Por Agotar';
-                    document.getElementById('caja-dia').innerText = '$ ' + d.caja.toLocaleString('es-CO');
-                })
-                .catch(e => console.error('Error:', e));
-        }
-
-        cargarDatos();
-        setInterval(cargarDatos, 5000);
-    });
     </script>
 </body>
 </html>

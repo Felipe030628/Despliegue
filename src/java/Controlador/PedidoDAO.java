@@ -3,7 +3,9 @@ package Controlador;
 import Modelo.Pedidos;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PedidoDAO {
     Conexion cn = new Conexion();
@@ -71,6 +73,35 @@ public class PedidoDAO {
             cerrarRecursos();
         }
         return total;
+    }
+
+    // Suma real de ventas (total de pedidos) agrupada por día, para los últimos 7 días.
+    // La columna "fecha" se guarda como texto en formato datetime-local ("yyyy-MM-ddTHH:mm"),
+    // por eso se convierte explícitamente con STR_TO_DATE antes de agrupar/filtrar.
+    // La clave del mapa es la fecha en formato "yyyy-MM-dd".
+    public Map<String, Double> obtenerVentasUltimos7Dias() {
+        Map<String, Double> ventasPorDia = new LinkedHashMap<>();
+        String sql = "SELECT DATE(STR_TO_DATE(fecha, '%Y-%m-%dT%H:%i')) AS dia, SUM(total) AS totalDia "
+                + "FROM pedidos "
+                + "WHERE STR_TO_DATE(fecha, '%Y-%m-%dT%H:%i') >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) "
+                + "GROUP BY dia "
+                + "ORDER BY dia ASC";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String dia = rs.getString("dia");
+                if (dia != null) {
+                    ventasPorDia.put(dia, rs.getDouble("totalDia"));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error en obtenerVentasUltimos7Dias: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return ventasPorDia;
     }
 
     public Pedidos listarPorId(int id) {
