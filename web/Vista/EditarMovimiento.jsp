@@ -66,7 +66,9 @@
 
                     <div class="col-md-3">
                         <label class="form-label">Motivo</label>
-                        <input type="text" name="motivo" class="form-control" value="${movimiento.motivo}" placeholder="Motivo (Entrada/Salida)" required>
+                        <select name="motivo" class="form-select" required>
+                            <option value="Entrada" selected>Entrada</option>
+                        </select>
                     </div>
 
                     <div class="col-md-2">
