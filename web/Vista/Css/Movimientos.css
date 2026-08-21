@@ -1,0 +1,20 @@
+/* Estilos específicos para el panel de Stock General (Movimientos de Stock) */
+
+.badge-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+.badge-stock::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+}
+.badge-stock[data-status="bajo"]::before { background: var(--gold); }
+.badge-stock[data-status="agotado"]::before { background: var(--danger); }
+.badge-stock[data-status="agotado"] { color: var(--danger); }
+.badge-stock[data-status="bajo"] { color: var(--gold-soft); }
+
+.tabla-stock-general td:first-child { font-weight: 600; }

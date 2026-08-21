@@ -32,6 +32,9 @@ public class Movimiento extends HttpServlet {
                 
                 request.setAttribute("listaMov", lista);
                 request.setAttribute("listaProd", daoProd.listarProductos());
+                // Stock general: se recalcula en cada carga a partir de todos los
+                // movimientos (entradas/salidas manuales + salidas por pedidos).
+                request.setAttribute("listaStock", daoProd.listarProductosConStock());
                 request.getRequestDispatcher("Vista/Movimientos.jsp").forward(request, response);
                 break;
 

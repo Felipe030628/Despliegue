@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Global.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Movimientos.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -24,7 +25,7 @@
         <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuInventario">
             <i class="bi bi-box-seam me-2"></i> Inventario
         </a>
-        <ul class="collapse list-unstyled ps-3" id="menuInventario">
+        <ul class="collapse list-unstyled ps-3 show" id="menuInventario">
             <!-- Enlace para acceder a la gestión de productos -->
 <li>
     <a href="${pageContext.request.contextPath}/Producto?accion=listar">Productos</a>
@@ -65,6 +66,48 @@
         </aside>
 
         <main class="main-content">
+
+            <!-- STOCK GENERAL: foto actual del inventario, se recalcula con cada
+                 movimiento manual y con cada venta/anulación de pedido -->
+            <div class="content-card">
+                <h5>Stock General</h5>
+                <table class="table table-striped align-middle tabla-stock-general">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio</th>
+                            <th>Stock Actual</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:forEach var="s" items="${listaStock}">
+                            <tr>
+                                <td>${s.nombre}</td>
+                                <td>$${s.precio}</td>
+                                <td>${s.stock}</td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${s.stock <= 0}">
+                                            <span class="badge-stock" data-status="agotado">Agotado</span>
+                                        </c:when>
+                                        <c:when test="${s.stock <= 5}">
+                                            <span class="badge-stock" data-status="bajo">Stock bajo</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="badge-stock" data-status="ok">Disponible</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                        <c:if test="${empty listaStock}">
+                            <tr><td colspan="4" class="text-center">No hay productos registrados todavía.</td></tr>
+                        </c:if>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="content-card">
                 <h5>Registrar Movimiento de Stock</h5>
                 <form action="${pageContext.request.contextPath}/Movimiento?accion=guardar" method="POST" class="row g-3">
@@ -92,6 +135,7 @@
             </div>
 
             <div class="content-card">
+                <h5>Historial de Movimientos</h5>
                 <table class="table table-striped">
                     <thead>
                         <tr>
