@@ -96,6 +96,41 @@ body {
     box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.15);
 }
 
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 46px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-gray);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover,
+.toggle-password:focus {
+    color: var(--gold);
+    outline: none;
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+}
+
 .btn-gold {
     width: 100%;
     background: var(--gold);
