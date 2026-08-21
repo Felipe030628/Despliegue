@@ -1,5 +1,6 @@
 package Controlador;
 
+import Modelo.DetallePedido;
 import Modelo.Pedidos;
 import java.sql.*;
 import java.util.ArrayList;
@@ -54,6 +55,87 @@ public class PedidoDAO {
         } finally { 
             cerrarRecursos(); 
         }
+    }
+
+    // Registra el pedido, guarda cada producto pedido en detalle_pedido y genera
+    // automáticamente el movimiento de stock (salida) correspondiente a cada línea.
+    // Todo ocurre en una sola transacción: si algo falla no se descuenta nada.
+    // Devuelve el idPedido generado, o -1 si falló.
+    public int registrarPedidoConDetalle(Pedidos p, List<DetallePedido> detalles) {
+        int idPedidoGenerado = -1;
+        String sqlPedido = "INSERT INTO pedidos (cliente, mesa, fecha, estado, total) VALUES (?,?,?,?,?)";
+        String sqlDetalle = "INSERT INTO detalle_pedido (idPedido, idProducto, cantidad, precio_unitario, subtotal) VALUES (?,?,?,?,?)";
+        String sqlMovimiento = "INSERT INTO movimientos_stock (fecha, cantidad, motivo, idProducto) VALUES (?,?,?,?)";
+
+        Connection conTx = null;
+        PreparedStatement psPedido = null;
+        PreparedStatement psDetalle = null;
+        PreparedStatement psMov = null;
+        ResultSet keys = null;
+
+        try {
+            conTx = cn.Conexion();
+            conTx.setAutoCommit(false);
+
+            psPedido = conTx.prepareStatement(sqlPedido, Statement.RETURN_GENERATED_KEYS);
+            psPedido.setString(1, p.getCliente());
+            psPedido.setString(2, p.getMesa());
+            psPedido.setString(3, p.getFecha());
+            psPedido.setString(4, p.getEstado());
+            psPedido.setDouble(5, p.getTotal());
+            psPedido.executeUpdate();
+
+            keys = psPedido.getGeneratedKeys();
+            if (keys.next()) {
+                idPedidoGenerado = keys.getInt(1);
+            }
+
+            if (idPedidoGenerado > 0 && detalles != null && !detalles.isEmpty()) {
+                psDetalle = conTx.prepareStatement(sqlDetalle);
+                psMov = conTx.prepareStatement(sqlMovimiento);
+
+                for (DetallePedido d : detalles) {
+                    psDetalle.setInt(1, idPedidoGenerado);
+                    psDetalle.setInt(2, d.getIdProducto());
+                    psDetalle.setInt(3, d.getCantidad());
+                    psDetalle.setDouble(4, d.getPrecioUnitario());
+                    psDetalle.setDouble(5, d.getSubtotal());
+                    psDetalle.addBatch();
+
+                    psMov.setString(1, p.getFecha());
+                    psMov.setInt(2, d.getCantidad());
+                    psMov.setString(3, "Salida - Pedido #" + idPedidoGenerado);
+                    psMov.setInt(4, d.getIdProducto());
+                    psMov.addBatch();
+                }
+                psDetalle.executeBatch();
+                psMov.executeBatch();
+            }
+
+            conTx.commit();
+        } catch (SQLException e) {
+            System.out.println("Error registrar pedido con detalle: " + e);
+            idPedidoGenerado = -1;
+            try {
+                if (conTx != null) conTx.rollback();
+            } catch (SQLException ex) {
+                System.out.println("Error en rollback: " + ex.getMessage());
+            }
+        } finally {
+            try {
+                if (keys != null) keys.close();
+                if (psDetalle != null) psDetalle.close();
+                if (psMov != null) psMov.close();
+                if (psPedido != null) psPedido.close();
+                if (conTx != null) {
+                    conTx.setAutoCommit(true);
+                    conTx.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Error al cerrar recursos de transacción: " + e.getMessage());
+            }
+        }
+        return idPedidoGenerado;
     }
 
     public double obtenerTotalCajaHoy() {
@@ -159,16 +241,58 @@ public class PedidoDAO {
     }
     
     public void eliminarPedido(int idPedido) {
-    String sql = "DELETE FROM pedidos WHERE idPedido = ?";
-    try {
-        con = cn.Conexion();
-        ps = con.prepareStatement(sql);
-        ps.setInt(1, idPedido);
-        ps.executeUpdate();
-    } catch (Exception e) {
-        System.out.println("❌ Error al eliminar pedido: " + e.getMessage());
-    } finally {
-        cerrarRecursos();
+        // Antes de borrar el pedido, se repone el stock de cada producto que tenía
+        // (se genera un movimiento de "Entrada" por anulación) y se borra su detalle.
+        Connection conTx = null;
+        try {
+            conTx = cn.Conexion();
+            conTx.setAutoCommit(false);
+
+            String sqlDetalle = "SELECT idProducto, cantidad FROM detalle_pedido WHERE idPedido = ?";
+            PreparedStatement psSel = conTx.prepareStatement(sqlDetalle);
+            psSel.setInt(1, idPedido);
+            ResultSet rsDet = psSel.executeQuery();
+
+            String sqlMov = "INSERT INTO movimientos_stock (fecha, cantidad, motivo, idProducto) VALUES (NOW(), ?, ?, ?)";
+            PreparedStatement psMov = conTx.prepareStatement(sqlMov);
+            while (rsDet.next()) {
+                psMov.setInt(1, rsDet.getInt("cantidad"));
+                psMov.setString(2, "Entrada - Anulación pedido #" + idPedido);
+                psMov.setInt(3, rsDet.getInt("idProducto"));
+                psMov.addBatch();
+            }
+            psMov.executeBatch();
+            rsDet.close();
+            psSel.close();
+            psMov.close();
+
+            PreparedStatement psDelDetalle = conTx.prepareStatement("DELETE FROM detalle_pedido WHERE idPedido = ?");
+            psDelDetalle.setInt(1, idPedido);
+            psDelDetalle.executeUpdate();
+            psDelDetalle.close();
+
+            PreparedStatement psDelPedido = conTx.prepareStatement("DELETE FROM pedidos WHERE idPedido = ?");
+            psDelPedido.setInt(1, idPedido);
+            psDelPedido.executeUpdate();
+            psDelPedido.close();
+
+            conTx.commit();
+        } catch (Exception e) {
+            System.out.println("❌ Error al eliminar pedido: " + e.getMessage());
+            try {
+                if (conTx != null) conTx.rollback();
+            } catch (SQLException ex) {
+                System.out.println("Error en rollback: " + ex.getMessage());
+            }
+        } finally {
+            try {
+                if (conTx != null) {
+                    conTx.setAutoCommit(true);
+                    conTx.close();
+                }
+            } catch (SQLException e) {
+                System.out.println("Error al cerrar recursos: " + e.getMessage());
+            }
+        }
     }
-}
 }

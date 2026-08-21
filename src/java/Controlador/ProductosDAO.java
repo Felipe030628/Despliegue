@@ -155,6 +155,63 @@ public class ProductosDAO {
         return lista;
     }
 
+    // 1b. LISTAR PRODUCTOS CON SU STOCK ACTUAL (para el selector de Pedidos)
+    // El stock no se guarda en una columna: se calcula sumando entradas y restando
+    // salidas registradas en movimientos_stock, igual que en contarProductosCriticos().
+    public List<Productos> listarProductosConStock() {
+        List<Productos> lista = new ArrayList<>();
+        String sql = "SELECT p.idProductos, p.nombre, p.precio, p.categorias_idCategorias, "
+                + "COALESCE(SUM(CASE "
+                + "    WHEN LOWER(m.motivo) LIKE 'entrada%' THEN m.cantidad "
+                + "    WHEN LOWER(m.motivo) LIKE 'salida%' THEN -m.cantidad "
+                + "    ELSE 0 END), 0) AS stock "
+                + "FROM productos p "
+                + "LEFT JOIN movimientos_stock m ON m.idProducto = p.idProductos "
+                + "GROUP BY p.idProductos, p.nombre, p.precio, p.categorias_idCategorias "
+                + "ORDER BY p.nombre";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Productos p = new Productos();
+                p.setId(rs.getInt("idProductos"));
+                p.setNombre(rs.getString("nombre"));
+                p.setPrecio(rs.getDouble("precio"));
+                p.setIdCategoria(rs.getInt("categorias_idCategorias"));
+                p.setStock(rs.getInt("stock"));
+                lista.add(p);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error en listarProductosConStock: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return lista;
+    }
+
+    // Stock actual de un solo producto (entradas - salidas)
+    public int obtenerStock(int idProducto) {
+        int stock = 0;
+        String sql = "SELECT COALESCE(SUM(CASE "
+                + "    WHEN LOWER(motivo) LIKE 'entrada%' THEN cantidad "
+                + "    WHEN LOWER(motivo) LIKE 'salida%' THEN -cantidad "
+                + "    ELSE 0 END), 0) AS stock "
+                + "FROM movimientos_stock WHERE idProducto = ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setInt(1, idProducto);
+            rs = ps.executeQuery();
+            if (rs.next()) stock = rs.getInt("stock");
+        } catch (SQLException e) {
+            System.err.println("Error en obtenerStock: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return stock;
+    }
+
     // Método para cerrar recursos de forma segura
     private void cerrarRecursos() {
         try {

@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Global.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Pedidos.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -58,26 +59,91 @@
         </aside>
 
         <main class="main-content">
+
+            <c:if test="${not empty sessionScope.errorPedido}">
+                <div class="alert-stock">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>${sessionScope.errorPedido}
+                </div>
+                <c:remove var="errorPedido" scope="session"/>
+            </c:if>
+
             <div class="content-card">
                 <h5>Nuevo Pedido</h5>
-                <form action="${pageContext.request.contextPath}/Pedido?accion=guardar" method="POST" class="row g-3">
-                    <div class="col-md-3"><input type="text" name="cliente" class="form-control" placeholder="Nombre Cliente" required></div>
-                    
-                    <div class="col-md-2">
-                        <select name="mesa" class="form-select" required>
-                            <option value="" disabled selected>Seleccione Mesa</option>
-                            <c:forEach var="m" items="${listaMesas}">
-                                <option value="${m.numero_mesa}">${m.numero_mesa} (Cap: ${m.capacidad})</option>
-                            </c:forEach>
-                        </select>
+                <form id="formPedido" action="${pageContext.request.contextPath}/Pedido?accion=guardar" method="POST">
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4"><input type="text" name="cliente" class="form-control" placeholder="Nombre Cliente" required></div>
+                        <div class="col-md-3">
+                            <select name="mesa" class="form-select" required>
+                                <option value="" disabled selected>Seleccione Mesa</option>
+                                <c:forEach var="m" items="${listaMesas}">
+                                    <option value="${m.numero_mesa}">${m.numero_mesa} (Cap: ${m.capacidad})</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="col-md-5"><input type="datetime-local" name="fecha" class="form-control" required></div>
                     </div>
-                    <div class="col-md-3"><input type="datetime-local" name="fecha" class="form-control" required></div>
-                    <div class="col-md-2"><input type="number" step="0.01" name="total" class="form-control" placeholder="Total" required></div>
-                    <div class="col-md-2"><button type="submit" class="btn btn-gold w-100">Registrar</button></div>
+
+                    <label class="form-label">Agregar productos al pedido</label>
+                    <div class="selector-producto mb-2">
+                        <div>
+                            <select id="selectProducto" class="form-select">
+                                <option value="">Seleccione producto</option>
+                                <c:forEach var="p" items="${listaProductos}">
+                                    <option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">
+                                        ${p.nombre} — $${p.precio} (Stock: ${p.stock})
+                                    </option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="number" id="inputCantidad" class="form-control" min="1" value="1" placeholder="Cantidad">
+                        </div>
+                        <div>
+                            <!-- reservado para futuras columnas (p.ej. observaciones) -->
+                        </div>
+                        <div>
+                            <button type="button" id="btnAgregarProducto" class="btn btn-gold w-100">
+                                <i class="bi bi-plus-lg me-1"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="precioPreview" class="precio-preview"></div>
+                    <div id="stockPreview" class="precio-preview"></div>
+
+                    <table class="table table-striped align-middle mt-3" id="tablaCarrito">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio Unit.</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th class="text-center">Quitar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoCarrito">
+                            <tr class="carrito-vacio"><td colspan="5">Todavía no agregaste productos a este pedido.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="total-carrito">
+                        <span>Total del pedido</span>
+                        <strong id="totalCarritoTexto">$0.00</strong>
+                    </div>
+
+                    <input type="hidden" id="inputTotalOculto" name="total" value="0">
+                    <div id="contenedorInputsOcultos"></div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-gold px-4">
+                            <i class="bi bi-check2-circle me-1"></i> Registrar Pedido
+                        </button>
+                    </div>
                 </form>
             </div>
 
             <div class="content-card">
+                <h5>Pedidos Registrados</h5>
                 <table class="table table-striped align-middle">
                     <thead>
                         <tr>
@@ -100,16 +166,22 @@
                                 <td>${p.estado}</td>
                                 <td>$${p.total}</td>
                                 <td>
-    <button type="button" class="btn btn-warning btn-sm" onclick="location.href='${pageContext.request.contextPath}/Pedido?accion=cargar&id=${p.idPedido}'">
-        <i class="bi bi-pencil-fill"></i>
-    </button>
-        <a href="${pageContext.request.contextPath}/Pedido?accion=eliminar&id=${p.idPedido}" 
-       class="btn btn-danger btn-sm" 
-       title="Eliminar"
-       onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido?');">
-        <i class="bi bi-trash-fill"></i>
-    </a>
-</td>
+                                    <button type="button" class="btn btn-icon" title="Ver detalle" onclick="location.href='${pageContext.request.contextPath}/Pedido?accion=ver&id=${p.idPedido}'">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-icon" title="Factura PDF" onclick="window.open('${pageContext.request.contextPath}/Pedido?accion=factura&id=${p.idPedido}', '_blank')">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm" title="Editar" onclick="location.href='${pageContext.request.contextPath}/Pedido?accion=cargar&id=${p.idPedido}'">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </button>
+                                    <a href="${pageContext.request.contextPath}/Pedido?accion=eliminar&id=${p.idPedido}"
+                                       class="btn btn-danger btn-sm"
+                                       title="Eliminar (repone el stock)"
+                                       onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido? El stock de sus productos será repuesto.');">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </td>
                             </tr>
                         </c:forEach>
                     </tbody>
@@ -118,5 +190,6 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="${pageContext.request.contextPath}/Vista/JavaScript/Pedidos.js"></script>
 </body>
 </html>

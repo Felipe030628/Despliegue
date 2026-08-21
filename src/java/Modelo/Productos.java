@@ -8,8 +8,12 @@ public class Productos {
     private int idCategoria;
     private int idCategorias;
     private String nom_categoria;
+    private int stock; // calculado a partir de movimientos_stock (entradas - salidas)
 
     public Productos() {}
+
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
 
     // Getters y Setters
     public int getIdCategorias() {

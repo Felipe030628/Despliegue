@@ -1,0 +1,92 @@
+/* Estilos específicos para el armado de pedidos (carrito de productos) */
+
+.selector-producto {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 14px;
+    align-items: end;
+}
+
+.precio-preview {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-top: 6px;
+}
+.precio-preview strong { color: var(--gold-soft); }
+
+.stock-preview[data-bajo="1"] { color: var(--danger); }
+
+#tablaCarrito tbody tr td { vertical-align: middle; }
+
+.carrito-vacio td {
+    text-align: center;
+    color: var(--ink-faint);
+    padding: 22px 12px !important;
+    font-style: italic;
+}
+
+.total-carrito {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+    padding-top: 16px;
+    margin-top: 10px;
+    border-top: 1px solid var(--panel-line);
+}
+.total-carrito span {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.total-carrito strong {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5rem;
+    color: var(--ink);
+}
+
+.btn-quitar-linea {
+    width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    border: 1px solid rgba(161,51,69,0.35);
+    background: rgba(124,36,50,0.10);
+    color: var(--wine-bright);
+    padding: 0;
+    font-size: 0.8rem;
+}
+.btn-quitar-linea:hover { background: var(--wine-bright); color: var(--ink); }
+
+.alert-stock {
+    background: rgba(124,36,50,0.14);
+    border: 1px solid rgba(161,51,69,0.4);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.info-pedido {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.info-pedido div {
+    background: var(--panel-alt);
+    border: 1px solid var(--panel-line-soft);
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+.info-pedido span {
+    display: block;
+    font-size: 0.66rem;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+}
+.info-pedido strong { color: var(--ink); font-size: 0.95rem; }

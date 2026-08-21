@@ -4,7 +4,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editar Pedido | BarStock</title>
+    <title>Detalle del Pedido | BarStock</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Global.css">
@@ -12,7 +12,6 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar completo -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h3>BarStock</h3>
@@ -22,8 +21,6 @@
                 <li>
                     <a href="Vista/Panel.jsp"><i class="bi bi-sliders me-2"></i> Dashboard</a>
                 </li>
-
-                <!-- Menú Desplegable: Inventario -->
                 <li class="nav-item dropdown">
                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuInventario">
                         <i class="bi bi-box-seam me-2"></i> Inventario
@@ -33,8 +30,6 @@
                         <li><a href="${pageContext.request.contextPath}/Movimiento?accion=listar"><i class="bi bi-arrow-left-right me-3"></i> Movimientos Stock</a></li>
                     </ul>
                 </li>
-
-                <!-- Menú Desplegable: Gestión de Pedidos -->
                 <li class="nav-item dropdown">
                     <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuPedidos">
                         <i class="bi bi-cart-check me-2"></i> Pedidos
@@ -44,13 +39,11 @@
                         <li><a href="${pageContext.request.contextPath}/Mesas?accion=listar"><i class="bi bi-ui-checks-grid me-3"></i> Mesas</a></li>
                     </ul>
                 </li>
-
                 <li>
                     <a href="${pageContext.request.contextPath}/UsuariosCont?accion=listar">
                         <i class="bi bi-people me-3"></i> Empleados
                     </a>
                 </li>
-
                 <li class="mt-5">
                     <a href="${pageContext.request.contextPath}/Pedido?accion=listar" class="logout-link">
                         <i class="bi bi-arrow-left me-2"></i> Volver al Listado
@@ -59,60 +52,17 @@
             </ul>
         </aside>
 
-        <!-- Contenido Principal: Formulario de Edición de Pedido -->
         <main class="main-content">
             <div class="content-card">
-                <h5 class="mb-4">Editar Pedido</h5>
-                
-                <form action="${pageContext.request.contextPath}/Pedido?accion=actualizar" method="POST" class="row g-3">
-                    
-                    <!-- ID Oculto del Pedido -->
-                    <input type="hidden" name="idPedido" value="${pedido.idPedido}">
+                <h5>Pedido #${pedido.idPedido}</h5>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Cliente</label>
-                        <input type="text" name="cliente" class="form-control" value="${pedido.cliente}" required>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <label class="form-label">Mesa</label>
-                        <select name="mesa" class="form-select" required>
-                            <option value="" disabled>Seleccione Mesa</option>
-                            <c:forEach var="m" items="${listaMesas}">
-                                <option value="${m.numero_mesa}" ${m.numero_mesa == pedido.mesa ? 'selected' : ''}>
-                                    ${m.numero_mesa} (Cap: ${m.capacidad})
-                                </option>
-                            </c:forEach>
-                        </select>
-                    </div>
+                <div class="info-pedido">
+                    <div><span>Cliente</span><strong>${pedido.cliente}</strong></div>
+                    <div><span>Mesa</span><strong>${pedido.mesa}</strong></div>
+                    <div><span>Fecha</span><strong>${pedido.fecha}</strong></div>
+                    <div><span>Estado</span><strong>${pedido.estado}</strong></div>
+                </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Fecha y Hora</label>
-                        <input type="datetime-local" name="fecha" class="form-control" value="${pedido.fecha}" required>
-                    </div>
-
-                    <div class="col-md-2">
-                        <label class="form-label">Total</label>
-                        <input type="number" step="0.01" name="total" class="form-control" value="${pedido.total}" required>
-                    </div>
-
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-gold w-100">Actualizar</button>
-                    </div>
-                    
-                    <div class="col-md-2">
-    <label class="form-label">Estado</label>
-    <select name="estado" class="form-select" required>
-        <option value="Pendiente" ${pedido.estado == 'Pendiente' ? 'selected' : ''}>Pendiente</option>
-        <option value="Completado" ${pedido.estado == 'Completado' ? 'selected' : ''}>Completado</option>
-        <option value="Cancelado" ${pedido.estado == 'Cancelado' ? 'selected' : ''}>Cancelado</option>
-    </select>
-</div>
-                </form>
-            </div>
-
-            <div class="content-card">
-                <h5>Productos del Pedido</h5>
                 <table class="table table-striped align-middle">
                     <thead>
                         <tr>
@@ -136,8 +86,13 @@
                         </c:if>
                     </tbody>
                 </table>
-                <p class="precio-preview">Los productos y cantidades no se editan aquí para no descuadrar el stock; si necesitás cambiarlos, eliminá el pedido (repone el stock automáticamente) y registralo de nuevo.</p>
-                <div class="d-flex justify-content-end">
+
+                <div class="total-carrito">
+                    <span>Total del pedido</span>
+                    <strong>$${pedido.total}</strong>
+                </div>
+
+                <div class="d-flex justify-content-end mt-3">
                     <button type="button" class="btn btn-gold px-4" onclick="window.open('${pageContext.request.contextPath}/Pedido?accion=factura&id=${pedido.idPedido}', '_blank')">
                         <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar Factura PDF
                     </button>
