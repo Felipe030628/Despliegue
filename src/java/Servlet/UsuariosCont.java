@@ -108,7 +108,8 @@ public class UsuariosCont extends HttpServlet {
                     }
 
                     int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); 
-                    int idRol = Integer.parseInt(request.getParameter("txtrol"));
+                    // Rol fijo: esta aplicación es de uso exclusivamente administrativo.
+                    int idRol = 1;
                     
                     u.setNombre(nombre);
                     u.setApellido(apellido);

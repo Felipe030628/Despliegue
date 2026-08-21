@@ -105,13 +105,6 @@
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label-premium">Cargo en el Bar (Rol)</label>
-                <select name="txtrol" class="form-select form-control-premium" required>
-                    <option value="1">Administrador (Control Total)</option>
-                    <option value="2">Mesero (Ventas y Pedidos)</option>
-                </select>
-            </div>
 
             <div class="mb-2">
                 <label class="form-label-premium">Contraseña</label>
