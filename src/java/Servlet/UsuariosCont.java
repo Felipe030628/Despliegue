@@ -158,27 +158,21 @@ public class UsuariosCont extends HttpServlet {
                     int idUsuarios = Integer.parseInt(request.getParameter("idUsuarios"));
                     String nombre = request.getParameter("nombre");
                     String apellido = request.getParameter("apellido");
-                    String correo = request.getParameter("correo");
-                    String contrasena = request.getParameter("contrasena");
-                    int idTipoDocumento = Integer.parseInt(request.getParameter("idTipoDocumento"));
-                    String num_documento = request.getParameter("num_documento");
                     String telefono = request.getParameter("telefono");
                     String direccion = request.getParameter("direccion");
-                    int idRol = Integer.parseInt(request.getParameter("idRol"));
 
+                    // Nota de seguridad: correo, contraseña y documento son datos esenciales
+                    // y NO se actualizan aquí, aunque el cliente los envíe en el formulario.
+                    // - correo/documento: identifican al usuario y su acceso al sistema.
+                    // - contraseña: solo se cambia mediante el flujo de recuperación por correo.
                     Usuarios usuAct = new Usuarios();
                     usuAct.setIdUsuarios(idUsuarios);
                     usuAct.setNombre(nombre);
                     usuAct.setApellido(apellido);
-                    usuAct.setCorreo(correo);
-                    usuAct.setContrasena(contrasena);
-                    usuAct.setIdTipoDocumento(idTipoDocumento);
-                    usuAct.setNombre_documento(num_documento);
                     usuAct.setTelefono(telefono);
                     usuAct.setDireccion(direccion);
-                    usuAct.setIdRol(idRol);
 
-                    dao.actualizarUsuario(usuAct);
+                    dao.actualizarDatosBasicos(usuAct);
                     response.sendRedirect("UsuariosCont?accion=listar");
                     
                 } catch (Exception e) {

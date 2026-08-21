@@ -123,9 +123,7 @@
                         <input type="number" name="cantidad" class="form-control" placeholder="Cantidad" required>
                     </div>
                     <div class="col-md-3">
-                        <select name="motivo" class="form-select" required>
-                            <option value="Entrada" selected>Entrada</option>
-                        </select>
+                        <input type="text" name="motivo" class="form-control" value="Entrada" readonly>
                     </div>
                     <div class="col-md-2">
                         <input type="date" name="fecha" class="form-control" required>

@@ -286,4 +286,75 @@ public class UsuariosDAO {
         }
         return verificado;
     }
+
+    // 10. Actualizar SOLO los datos de contacto del empleado (nombre, apellido, teléfono, dirección).
+    // A propósito NO toca correo, contraseña ni documento: son datos esenciales/sensibles que
+    // no deben poder cambiarse desde el formulario de edición de empleados.
+    public void actualizarDatosBasicos(Usuarios u) {
+        String sql = "UPDATE usuarios SET nombre = ?, apellido = ?, telefono = ?, direccion = ? WHERE idUsuarios = ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setString(1, u.getNombre());
+            ps.setString(2, u.getApellido());
+            ps.setString(3, u.getTelefono());
+            ps.setString(4, u.getDireccion());
+            ps.setInt(5, u.getIdUsuarios());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("❌ Error al actualizar datos básicos: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+    }
+
+    // 11. Guardar la nueva contraseña una vez validado el código de recuperación
+    public boolean actualizarContrasena(String correo, String nuevaContrasena) {
+        boolean actualizado = false;
+        String sql = "UPDATE usuarios SET contrasena = ? WHERE correo = ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setString(1, nuevaContrasena);
+            ps.setString(2, correo);
+            ps.executeUpdate();
+            actualizado = true;
+        } catch (Exception e) {
+            System.out.println("❌ Error al actualizar contraseña: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return actualizado;
+    }
+
+    // 12. Validar el código de recuperación de contraseña. A diferencia de validarYActivarCuenta(),
+    // NO toca la columna 'activo': solo confirma el código y lo invalida para que no se reutilice.
+    public boolean validarCodigoRecuperacion(String correo, String codigoIngresado) {
+        boolean verificado = false;
+        String sqlSelect = "SELECT codigo_verificacion FROM usuarios WHERE correo = ?";
+        String sqlUpdate = "UPDATE usuarios SET codigo_verificacion = NULL WHERE correo = ?";
+
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sqlSelect);
+            ps.setString(1, correo);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String codigoBD = rs.getString("codigo_verificacion");
+                if (codigoBD != null && codigoIngresado != null && codigoBD.equals(codigoIngresado)) {
+                    PreparedStatement psUpdate = con.prepareStatement(sqlUpdate);
+                    psUpdate.setString(1, correo);
+                    psUpdate.executeUpdate();
+                    psUpdate.close();
+                    verificado = true;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al validar código de recuperación: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return verificado;
+    }
 }

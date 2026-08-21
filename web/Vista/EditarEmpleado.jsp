@@ -79,44 +79,46 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Correo (Inicio de Sesión)</label>
-                        <input type="email" name="correo" class="form-control" value="${usuario.correo}" required>
+                        <input type="email" class="form-control" value="${usuario.correo}" disabled>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Contraseña</label>
-                        <input type="text" name="contrasena" class="form-control" value="${usuario.contrasena}" required>
+                        <input type="text" class="form-control" value="••••••••" disabled>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Tipo de Documento</label>
-                        <select name="idTipoDocumento" class="form-select" required>
-                            <option value="">Seleccione...</option>
+                        <select class="form-select" disabled>
                             <c:forEach var="td" items="${listaTiposDoc}">
-                                <option value="${td.idTipoDocumento}" ${usuario.idTipoDocumento == td.idTipoDocumento ? 'selected' : ''}>
+                                <option ${usuario.idTipoDocumento == td.idTipoDocumento ? 'selected' : ''}>
                                     ${td.nombre_documento}
                                 </option>
                             </c:forEach>
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label">Número de Documento</label>
-                        <input type="text" name="num_documento" class="form-control" value="${usuario.nombre_documento}" required>
+                        <input type="text" class="form-control" value="${usuario.nombre_documento}" disabled>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            El correo, la contraseña y el documento son datos esenciales y no se pueden editar aquí.
+                            Para cambiar la contraseña, usa la opción "¿Olvidaste tu contraseña?" desde el inicio de sesión.
+                        </small>
+                    </div>
+
+                    <div class="col-md-6">
                         <label class="form-label">Teléfono</label>
                         <input type="text" name="telefono" class="form-control" value="${usuario.telefono}" required>
                     </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <label class="form-label">Dirección</label>
                         <input type="text" name="direccion" class="form-control" value="${usuario.direccion}" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Rol (ID)</label>
-                        <input type="number" name="idRol" class="form-control" value="${usuario.idRol}" required>
                     </div>
 
                     <div class="col-12 mt-4">

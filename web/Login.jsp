@@ -29,6 +29,18 @@
             </div>
         <% } %>
 
+        <%-- Mensaje de éxito tras restablecer la contraseña --%>
+        <%
+            String status = request.getParameter("status");
+            if ("pass_actualizada".equals(status)) {
+        %>
+            <div class="success-toast" style="background: rgba(40,167,69,0.1); border: 1px solid #28a745; color: #7ce495; padding: 12px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión.
+            </div>
+        <%
+            }
+        %>
+
         <%-- FORMULARIO CORREGIDO: Nombres de input coinciden con el Servlet --%>
         <form action="${pageContext.request.contextPath}/ServletLogin" method="POST">
             <input type="hidden" name="accion" value="ingresar">
@@ -45,7 +57,10 @@
 
             <button type="submit" class="btn-gold">Entrar al Sistema</button>
         </form>
-        
+
+        <div class="footer-links" style="margin-top: 1rem;">
+            <a href="Vista/RecuperarContrasena.jsp">¿Olvidaste tu <span class="gold-span">contraseña?</span></a>
+        </div>
         <div class="footer-links">
             <a href="Registro.jsp">¿No tienes cuenta? <span class="gold-span">Regístrate aquí</span></a>
         </div>
