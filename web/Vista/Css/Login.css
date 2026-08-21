@@ -97,27 +97,53 @@ body {
 }
 
 .password-wrapper {
-    position: relative;
+    display: flex;
+    align-items: center;
+    background: #202020;
+    border: 1px solid #2e2e2e;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.password-wrapper:hover {
+    border-color: #3d3d3d;
+}
+
+.password-wrapper:focus-within {
+    border-color: var(--gold);
+    background: #242424;
+    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.15);
 }
 
 .password-wrapper input {
-    padding-right: 44px;
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.password-wrapper input:hover,
+.password-wrapper input:focus {
+    border: none;
+    background: transparent;
+    box-shadow: none;
 }
 
 .toggle-password {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;
     background: none;
     border: none;
-    padding: 4px;
+    width: 40px;
+    height: 40px;
+    margin-right: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-gray);
     cursor: pointer;
-    transition: color 0.2s ease;
+    border-radius: 8px;
+    transition: color 0.2s ease, background 0.2s ease;
 }
 
 .toggle-password:hover,
