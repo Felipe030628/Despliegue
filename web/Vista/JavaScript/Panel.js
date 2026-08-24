@@ -320,38 +320,107 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ==========================================================
-    // 5. BUSCADOR EN VIVO DEL DASHBOARD
-    //    Filtra las tarjetas KPI, la lista de "Más Solicitados"
-    //    y las categorías visibles en el propio panel.
+    // 5. BUSCADOR GLOBAL DEL DASHBOARD (productos + empleados reales)
+    //    Consulta /BuscarGlobal con debounce y muestra un desplegable
+    //    con las coincidencias directamente desde la base de datos.
     // ==========================================================
     const searchInput = document.getElementById('dashboardSearchInput');
+    const searchPanel = document.getElementById('searchResultsPanel');
+    const searchProductosList = document.getElementById('searchProductosList');
+    const searchEmpleadosList = document.getElementById('searchEmpleadosList');
+
+    let searchDebounceTimer = null;
+    let searchAbortController = null;
+
+    function escaparHtmlBusqueda(texto) {
+        const div = document.createElement('div');
+        div.innerText = texto == null ? '' : String(texto);
+        return div.innerHTML;
+    }
+
+    function cerrarPanelBusqueda() {
+        if (searchPanel) searchPanel.classList.remove('is-open');
+    }
+
+    function renderizarResultadosBusqueda(data) {
+        if (!searchProductosList || !searchEmpleadosList) return;
+
+        const productos = data.productos || [];
+        const empleados = data.empleados || [];
+
+        // Productos → enlazan directo a su edición en el módulo de Inventario
+        if (productos.length === 0) {
+            searchProductosList.innerHTML = '<li class="search-results-empty">Sin coincidencias</li>';
+        } else {
+            searchProductosList.innerHTML = productos.map(p => `
+                <li>
+                    <a href="${BASE_URL}/Producto?accion=cargar&id=${p.id}">
+                        <span>${escaparHtmlBusqueda(p.nombre)}</span>
+                        <span class="result-sub">$${Number(p.precio || 0).toLocaleString('es-CO')}</span>
+                    </a>
+                </li>`).join('');
+        }
+
+        // Empleados → enlazan directo a su edición en el módulo de Empleados
+        if (empleados.length === 0) {
+            searchEmpleadosList.innerHTML = '<li class="search-results-empty">Sin coincidencias</li>';
+        } else {
+            searchEmpleadosList.innerHTML = empleados.map(u => `
+                <li>
+                    <a href="${BASE_URL}/UsuariosCont?accion=cargar&id=${u.id}">
+                        <span>${escaparHtmlBusqueda(u.nombre)}</span>
+                        <span class="result-sub">${escaparHtmlBusqueda(u.correo)}</span>
+                    </a>
+                </li>`).join('');
+        }
+
+        if (searchPanel) searchPanel.classList.add('is-open');
+    }
+
+    function ejecutarBusquedaGlobal(termino) {
+        if (searchAbortController) searchAbortController.abort();
+        searchAbortController = new AbortController();
+
+        fetch(BASE_URL + '/BuscarGlobal?termino=' + encodeURIComponent(termino), {
+            signal: searchAbortController.signal
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) return;
+                renderizarResultadosBusqueda(data);
+            })
+            .catch(e => {
+                if (e.name !== 'AbortError') console.error('Error en la búsqueda global:', e);
+            });
+    }
+
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const termino = searchInput.value.trim().toLowerCase();
+            const termino = searchInput.value.trim();
 
-            // Filtra el listado de productos más solicitados
-            const topLista = document.getElementById('topProductosList');
-            if (topLista) {
-                topLista.querySelectorAll('li').forEach(li => {
-                    const texto = li.textContent.toLowerCase();
-                    li.classList.toggle('search-highlight-hidden', termino !== '' && !texto.includes(termino));
-                });
+            clearTimeout(searchDebounceTimer);
+
+            if (termino.length < 2) {
+                cerrarPanelBusqueda();
+                return;
             }
 
-            // Filtra las barras de categorías
-            const categorias = document.getElementById('categoriasProgress');
-            if (categorias) {
-                categorias.querySelectorAll('.progress-group').forEach(grupo => {
-                    const texto = grupo.textContent.toLowerCase();
-                    grupo.classList.toggle('search-highlight-hidden', termino !== '' && !texto.includes(termino));
-                });
-            }
+            searchDebounceTimer = setTimeout(() => ejecutarBusquedaGlobal(termino), 300);
+        });
 
-            // Resalta las tarjetas KPI relacionadas
-            document.querySelectorAll('.kpi-mini-card').forEach(card => {
-                const texto = card.textContent.toLowerCase();
-                card.classList.toggle('search-highlight-match', termino !== '' && texto.includes(termino));
-            });
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length >= 2 &&
+                (searchProductosList.innerHTML || searchEmpleadosList.innerHTML)) {
+                searchPanel.classList.add('is-open');
+            }
         });
     }
+
+    // Cierra el desplegable al hacer clic fuera del buscador
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-box')) cerrarPanelBusqueda();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cerrarPanelBusqueda();
+    });
 });

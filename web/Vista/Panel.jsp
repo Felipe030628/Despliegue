@@ -89,7 +89,17 @@
             <header class="top-navbar">
                 <div class="search-box">
                     <i class="bi bi-search"></i>
-                    <input type="text" id="dashboardSearchInput" placeholder="Buscar licores, transacciones, empleados...">
+                    <input type="text" id="dashboardSearchInput" placeholder="Buscar licores, transacciones, empleados..." autocomplete="off">
+                    <div class="search-results-panel" id="searchResultsPanel">
+                        <div class="search-results-section">
+                            <div class="search-results-title">Productos</div>
+                            <ul class="search-results-list" id="searchProductosList"></ul>
+                        </div>
+                        <div class="search-results-section">
+                            <div class="search-results-title">Empleados</div>
+                            <ul class="search-results-list" id="searchEmpleadosList"></ul>
+                        </div>
+                    </div>
                 </div>
                 <div class="top-navbar-actions">
 

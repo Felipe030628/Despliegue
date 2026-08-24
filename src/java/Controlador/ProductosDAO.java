@@ -245,4 +245,31 @@ public class ProductosDAO {
         }
         return p;
     }
+
+    // 13. Buscar productos por nombre (barra de búsqueda global del Panel)
+    public List<Productos> buscarPorNombre(String termino, int limite) {
+        List<Productos> lista = new ArrayList<>();
+        String sql = "SELECT * FROM productos WHERE nombre LIKE ? ORDER BY nombre LIMIT ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            ps.setString(1, "%" + termino + "%");
+            ps.setInt(2, limite);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Productos p = new Productos();
+                p.setId(rs.getInt("idProductos"));
+                p.setNombre(rs.getString("nombre"));
+                p.setPrecio(rs.getDouble("precio"));
+                p.setFecha_vencimiento(rs.getString("fecha_vencimiento"));
+                p.setIdCategoria(rs.getInt("categorias_idCategorias"));
+                lista.add(p);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error en buscarPorNombre: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return lista;
+    }
 }

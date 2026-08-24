@@ -357,4 +357,28 @@ public class UsuariosDAO {
         }
         return verificado;
     }
+
+    // 13. Buscar empleados por nombre, apellido o correo (barra de búsqueda global del Panel)
+    public List<Usuarios> buscarPorNombreOCorreo(String termino, int limite) {
+        List<Usuarios> lista = new ArrayList<>();
+        String sql = "SELECT * FROM usuarios WHERE nombre LIKE ? OR apellido LIKE ? OR correo LIKE ? ORDER BY nombre LIMIT ?";
+        try {
+            con = cn.Conexion();
+            ps = con.prepareStatement(sql);
+            String comodin = "%" + termino + "%";
+            ps.setString(1, comodin);
+            ps.setString(2, comodin);
+            ps.setString(3, comodin);
+            ps.setInt(4, limite);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                lista.add(mapearUsuario(rs));
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error en buscarPorNombreOCorreo: " + e.getMessage());
+        } finally {
+            cerrarRecursos();
+        }
+        return lista;
+    }
 }
