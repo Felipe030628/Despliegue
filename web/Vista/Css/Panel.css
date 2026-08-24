@@ -369,7 +369,206 @@ body {
     border-radius: 999px;
     padding: 9px 18px;
     background: rgba(201,164,77,0.06);
+    cursor: pointer;
+    transition: border-color .25s var(--ease), background-color .25s var(--ease);
 }
+.user-badge:hover .user-role { border-color: var(--gold); background: rgba(201,164,77,0.12); }
+
+/* ============================================================
+   POPOVERS DE CAMPANITA Y BUZÓN
+   ============================================================ */
+.nav-popover-wrapper { position: relative; }
+
+.nav-popover {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: -6px;
+    width: 300px;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity .2s var(--ease), transform .2s var(--ease), visibility .2s;
+    z-index: 60;
+    overflow: hidden;
+}
+.nav-popover.is-open { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.nav-popover-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--panel-line-soft);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: .4px;
+    color: var(--gold-soft);
+    text-transform: uppercase;
+}
+
+.nav-popover-list { list-style: none; margin: 0; padding: 6px; max-height: 320px; overflow-y: auto; }
+.nav-popover-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition: background-color .2s var(--ease);
+}
+.nav-popover-list li:hover { background: var(--panel-alt); }
+.nav-popover-list .item-main-text { font-size: 0.82rem; color: var(--ink); }
+.nav-popover-list small { font-size: 0.72rem; }
+
+.nav-popover-icon {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(201,164,77,0.08);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-size: 0.9rem;
+}
+.nav-popover-icon.text-danger { color: var(--wine-bright); background: var(--wine-dim); border-color: var(--wine-dim); }
+
+/* ============================================================
+   MINI CARNET DE USUARIO
+   ============================================================ */
+.carnet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 5, 6, 0.72);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s var(--ease), visibility .25s;
+}
+.carnet-overlay.is-open { opacity: 1; visibility: visible; }
+
+.carnet-card {
+    position: relative;
+    width: 320px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 40%), var(--panel);
+    border: 1px solid var(--gold-dim);
+    border-radius: var(--radius-lg);
+    padding: 30px 26px 22px;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    transform: scale(.92) translateY(10px);
+    transition: transform .25s var(--ease);
+}
+.carnet-overlay.is-open .carnet-card { transform: scale(1) translateY(0); }
+
+.carnet-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    background: transparent;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: color .2s var(--ease);
+}
+.carnet-close:hover { color: var(--gold-soft); }
+
+.carnet-brand {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+.carnet-brand span {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gold-soft);
+    letter-spacing: .5px;
+}
+.carnet-brand small {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--ink-faint);
+}
+
+.carnet-photo {
+    width: 92px; height: 92px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: rgba(201,164,77,0.08);
+    border: 2px solid var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.6rem;
+    color: var(--gold);
+}
+
+.carnet-nombre {
+    font-family: 'Fraunces', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 4px;
+    text-transform: capitalize;
+}
+
+.carnet-rol {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--gold-soft);
+    background: rgba(201,164,77,0.08);
+    border: 1px solid var(--gold-dim);
+    border-radius: 999px;
+    padding: 5px 14px;
+    margin: 0 0 18px;
+}
+
+.carnet-divider {
+    height: 1px;
+    background: var(--panel-line);
+    margin: 0 0 18px;
+}
+
+.carnet-detalle { display: flex; flex-direction: column; gap: 12px; text-align: left; margin-bottom: 20px; }
+.carnet-detalle-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+}
+.carnet-detalle-item i { color: var(--gold); font-size: 0.85rem; width: 16px; text-align: center; }
+
+.carnet-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 14px;
+    border-top: 1px dashed var(--panel-line);
+}
+.carnet-estado {
+    font-size: 0.68rem;
+    color: var(--success);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+.carnet-fecha {
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+}
+
+/* Resalte de búsqueda en vivo dentro del dashboard */
+.search-highlight-hidden { display: none !important; }
+.search-highlight-match { outline: 1px solid var(--gold-dim); border-radius: 10px; }
 
 /* KPI mini cards */
 .kpi-mini-card {

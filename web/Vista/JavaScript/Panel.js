@@ -210,4 +210,148 @@ document.addEventListener("DOMContentLoaded", () => {
 
     actualizarPanelCompleto();
     setInterval(actualizarPanelCompleto, 5000);
+
+    // ==========================================================
+    // 4. BOTONES DE LA BARRA SUPERIOR (buzón, campanita, carnet)
+    // ==========================================================
+
+    function cerrarTodosLosPopovers(excepto) {
+        document.querySelectorAll('.nav-popover.is-open').forEach(pop => {
+            if (pop !== excepto) pop.classList.remove('is-open');
+        });
+    }
+
+    function togglePopover(botonId, popoverId) {
+        const boton = document.getElementById(botonId);
+        const popover = document.getElementById(popoverId);
+        if (!boton || !popover) return;
+
+        boton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const yaAbierto = popover.classList.contains('is-open');
+            cerrarTodosLosPopovers();
+            if (!yaAbierto) popover.classList.add('is-open');
+        });
+    }
+
+    togglePopover('btnBuzon', 'buzonPopover');
+    togglePopover('btnCampana', 'campanaPopover');
+
+    // Cierra los popovers al hacer clic fuera de ellos
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.nav-popover-wrapper')) cerrarTodosLosPopovers();
+    });
+
+    // ---- Notificaciones de la campanita, generadas a partir del stock crítico real ----
+    function actualizarNotificaciones(d) {
+        const lista = document.getElementById('campanaList');
+        const badge = document.getElementById('campanaBadge');
+        if (!lista) return;
+
+        const critico = Number(d.critico || 0);
+        if (critico <= 0) {
+            lista.innerHTML = `
+                <li>
+                    <div class="nav-popover-icon"><i class="bi bi-check2-circle"></i></div>
+                    <div>
+                        <p class="m-0 item-main-text">Todo en orden</p>
+                        <small class="text-muted">No hay productos con stock crítico</small>
+                    </div>
+                </li>`;
+            if (badge) badge.style.display = 'none';
+        } else {
+            lista.innerHTML = `
+                <li>
+                    <div class="nav-popover-icon text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                    <div>
+                        <p class="m-0 item-main-text">${critico} producto(s) por agotarse</p>
+                        <small class="text-muted">Revisa el módulo de Inventario</small>
+                    </div>
+                </li>`;
+            if (badge) badge.style.display = 'block';
+        }
+    }
+
+    // Engancha las notificaciones al mismo ciclo de polling del panel
+    function actualizarPanelConNotificaciones() {
+        fetch(BASE_URL + '/DashboardData?t=' + Date.now())
+            .then(r => r.json())
+            .then(d => {
+                if (d.error) return;
+                actualizarNotificaciones(d);
+            })
+            .catch(() => {});
+    }
+    setInterval(actualizarPanelConNotificaciones, 5000);
+    actualizarPanelConNotificaciones();
+
+    // ---- Mini carnet del usuario ----
+    const carnetOverlay = document.getElementById('carnetOverlay');
+    const btnUserBadge = document.getElementById('btnUserBadge');
+    const carnetClose = document.getElementById('carnetClose');
+    const carnetFecha = document.getElementById('carnetFecha');
+
+    function abrirCarnet() {
+        if (!carnetOverlay) return;
+        if (carnetFecha) {
+            const hoy = new Date();
+            carnetFecha.textContent = hoy.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        carnetOverlay.classList.add('is-open');
+    }
+    function cerrarCarnet() {
+        if (carnetOverlay) carnetOverlay.classList.remove('is-open');
+    }
+
+    if (btnUserBadge) {
+        btnUserBadge.addEventListener('click', abrirCarnet);
+        btnUserBadge.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') abrirCarnet();
+        });
+    }
+    if (carnetClose) carnetClose.addEventListener('click', cerrarCarnet);
+    if (carnetOverlay) {
+        carnetOverlay.addEventListener('click', (e) => {
+            if (e.target === carnetOverlay) cerrarCarnet();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cerrarCarnet();
+    });
+
+    // ==========================================================
+    // 5. BUSCADOR EN VIVO DEL DASHBOARD
+    //    Filtra las tarjetas KPI, la lista de "Más Solicitados"
+    //    y las categorías visibles en el propio panel.
+    // ==========================================================
+    const searchInput = document.getElementById('dashboardSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const termino = searchInput.value.trim().toLowerCase();
+
+            // Filtra el listado de productos más solicitados
+            const topLista = document.getElementById('topProductosList');
+            if (topLista) {
+                topLista.querySelectorAll('li').forEach(li => {
+                    const texto = li.textContent.toLowerCase();
+                    li.classList.toggle('search-highlight-hidden', termino !== '' && !texto.includes(termino));
+                });
+            }
+
+            // Filtra las barras de categorías
+            const categorias = document.getElementById('categoriasProgress');
+            if (categorias) {
+                categorias.querySelectorAll('.progress-group').forEach(grupo => {
+                    const texto = grupo.textContent.toLowerCase();
+                    grupo.classList.toggle('search-highlight-hidden', termino !== '' && !texto.includes(termino));
+                });
+            }
+
+            // Resalta las tarjetas KPI relacionadas
+            document.querySelectorAll('.kpi-mini-card').forEach(card => {
+                const texto = card.textContent.toLowerCase();
+                card.classList.toggle('search-highlight-match', termino !== '' && texto.includes(termino));
+            });
+        });
+    }
 });

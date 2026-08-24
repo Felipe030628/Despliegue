@@ -1,4 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -88,12 +89,47 @@
             <header class="top-navbar">
                 <div class="search-box">
                     <i class="bi bi-search"></i>
-                    <input type="text" placeholder="Buscar licores, transacciones, empleados...">
+                    <input type="text" id="dashboardSearchInput" placeholder="Buscar licores, transacciones, empleados...">
                 </div>
                 <div class="top-navbar-actions">
-                    <button class="icon-nav-btn"><i class="bi bi-envelope"></i><span class="badge-dot"></span></button>
-                    <button class="icon-nav-btn"><i class="bi bi-bell"></i><span class="badge-dot"></span></button>
-                    <div class="user-badge">
+
+                    <div class="nav-popover-wrapper">
+                        <button class="icon-nav-btn" id="btnBuzon" type="button"><i class="bi bi-envelope"></i><span class="badge-dot" id="buzonBadge"></span></button>
+                        <div class="nav-popover" id="buzonPopover">
+                            <div class="nav-popover-header">
+                                <span>Buzón de mensajes</span>
+                            </div>
+                            <ul class="nav-popover-list" id="buzonList">
+                                <li>
+                                    <div class="nav-popover-icon"><i class="bi bi-person-circle"></i></div>
+                                    <div>
+                                        <p class="m-0 item-main-text">Sin mensajes nuevos</p>
+                                        <small class="text-muted">Aquí verás tus mensajes internos</small>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="nav-popover-wrapper">
+                        <button class="icon-nav-btn" id="btnCampana" type="button"><i class="bi bi-bell"></i><span class="badge-dot" id="campanaBadge"></span></button>
+                        <div class="nav-popover" id="campanaPopover">
+                            <div class="nav-popover-header">
+                                <span>Notificaciones</span>
+                            </div>
+                            <ul class="nav-popover-list" id="campanaList">
+                                <li>
+                                    <div class="nav-popover-icon text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                                    <div>
+                                        <p class="m-0 item-main-text">Cargando notificaciones...</p>
+                                        <small class="text-muted">Se generan según el stock crítico</small>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="user-badge" id="btnUserBadge" role="button" tabindex="0">
                         <span class="user-role">
                             <i class="bi bi-person me-1"></i>
                             ${sessionScope.usuarioLogueado != null ? sessionScope.usuarioLogueado.nombre : "Administrador"}
@@ -101,6 +137,59 @@
                     </div>
                 </div>
             </header>
+
+            <!-- ===== MINI CARNET DE USUARIO ===== -->
+            <div class="carnet-overlay" id="carnetOverlay">
+                <div class="carnet-card" id="carnetCard">
+                    <button class="carnet-close" id="carnetClose" type="button" aria-label="Cerrar">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <div class="carnet-brand">
+                        <span>BarStock</span>
+                        <small>Credencial de Empleado</small>
+                    </div>
+
+                    <div class="carnet-photo">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+
+                    <h3 class="carnet-nombre">
+                        ${sessionScope.usuarioLogueado != null ?
+                            sessionScope.usuarioLogueado.nombre.concat(' ').concat(sessionScope.usuarioLogueado.apellido != null ? sessionScope.usuarioLogueado.apellido : '')
+                            : 'Administrador'}
+                    </h3>
+                    <p class="carnet-rol" id="carnetRol">
+                        <c:choose>
+                            <c:when test="${sessionScope.usuarioLogueado != null and sessionScope.usuarioLogueado.idRol == 1}">Administrador</c:when>
+                            <c:when test="${sessionScope.usuarioLogueado != null and sessionScope.usuarioLogueado.idRol == 2}">Empleado</c:when>
+                            <c:otherwise>Administrador</c:otherwise>
+                        </c:choose>
+                    </p>
+
+                    <div class="carnet-divider"></div>
+
+                    <div class="carnet-detalle">
+                        <div class="carnet-detalle-item">
+                            <i class="bi bi-envelope"></i>
+                            <span>${sessionScope.usuarioLogueado != null ? sessionScope.usuarioLogueado.correo : 'No disponible'}</span>
+                        </div>
+                        <div class="carnet-detalle-item">
+                            <i class="bi bi-telephone"></i>
+                            <span>${sessionScope.usuarioLogueado != null ? sessionScope.usuarioLogueado.telefono : 'No disponible'}</span>
+                        </div>
+                        <div class="carnet-detalle-item">
+                            <i class="bi bi-card-text"></i>
+                            <span>ID Empleado: #${sessionScope.usuarioLogueado != null ? sessionScope.usuarioLogueado.idUsuarios : '000'}</span>
+                        </div>
+                    </div>
+
+                    <div class="carnet-footer">
+                        <span class="carnet-estado"><i class="bi bi-check-circle-fill"></i> Sesión activa</span>
+                        <span class="carnet-fecha" id="carnetFecha"></span>
+                    </div>
+                </div>
+            </div>
 
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
