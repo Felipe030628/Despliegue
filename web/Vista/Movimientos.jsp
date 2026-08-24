@@ -162,7 +162,7 @@
                     <a href="${pageContext.request.contextPath}/Movimiento?accion=eliminar&id=${m.idMovimiento}" 
        class="btn btn-danger btn-sm" 
        title="Eliminar"
-       onclick="return confirm('¿Estás seguro de que deseas eliminar este movimiento?');">
+       data-confirm-message="¿Estás seguro de que deseas eliminar este movimiento?">
         <i class="bi bi-trash-fill"></i>
     </a>
             </td>
@@ -174,5 +174,6 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <%@ include file="ConfirmModal.jsp" %>
 </body>
 </html>

@@ -13,10 +13,13 @@ public class MovimientoStockDAO {
     PreparedStatement ps;
     ResultSet rs;
 
-    // LISTAR TODOS LOS MOVIMIENTOS
+    // LISTAR TODOS LOS MOVIMIENTOS (incluye el nombre del producto vía JOIN)
     public List<MovimientosStock> listarMovimientos() {
         List<MovimientosStock> lista = new ArrayList<>();
-        String sql = "SELECT * FROM movimientos_stock";
+        String sql = "SELECT m.*, p.nombre AS nombreProducto "
+                + "FROM movimientos_stock m "
+                + "LEFT JOIN productos p ON p.idProductos = m.idProducto "
+                + "ORDER BY m.idMovimiento DESC";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
@@ -28,6 +31,7 @@ public class MovimientoStockDAO {
                 m.setCantidad(rs.getInt("cantidad"));
                 m.setMotivo(rs.getString("motivo"));
                 m.setIdProducto(rs.getInt("idProducto"));
+                m.setNombreProducto(rs.getString("nombreProducto"));
                 lista.add(m);
             }
             System.out.println("DAO: Se cargaron " + lista.size() + " registros.");
