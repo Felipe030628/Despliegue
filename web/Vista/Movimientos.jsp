@@ -140,7 +140,7 @@
                     <thead>
                         <tr>
                             <th>ID Mov.</th>
-                            <th>ID Prod.</th>
+                            <th>Producto</th>
                             <th>Cantidad</th>
                             <th>Motivo</th>
                             <th>Fecha</th>
@@ -151,7 +151,7 @@
     <c:forEach var="m" items="${listaMov}">
         <tr>
             <td>${m.idMovimiento}</td>
-            <td>${m.idProducto}</td>
+            <td>${not empty m.nombreProducto ? m.nombreProducto : 'Producto eliminado'}</td>
             <td>${m.cantidad}</td>
             <td>${m.motivo}</td>
             <td>${m.fecha}</td>
@@ -162,7 +162,7 @@
                     <a href="${pageContext.request.contextPath}/Movimiento?accion=eliminar&id=${m.idMovimiento}" 
        class="btn btn-danger btn-sm" 
        title="Eliminar"
-       data-confirm-message="¿Estás seguro de que deseas eliminar este movimiento?">
+       onclick="return confirm('¿Estás seguro de que deseas eliminar este movimiento?');">
         <i class="bi bi-trash-fill"></i>
     </a>
             </td>
@@ -174,6 +174,5 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <%@ include file="ConfirmModal.jsp" %>
 </body>
 </html>

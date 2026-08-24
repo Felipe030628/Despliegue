@@ -118,7 +118,7 @@
                                                     <a href="${pageContext.request.contextPath}/UsuariosCont?accion=cambiarEstado&id=${u.idUsuarios}&activo=0" 
                                                        class="btn btn-danger btn-sm" 
                                                        title="Desactivar"
-                                                       data-confirm-message="¿Estás seguro de desactivar a ${u.nombre}? Ya no podrá iniciar sesión.">
+                                                       onclick="return confirm('¿Estás seguro de desactivar a ${u.nombre}? Ya no podrá iniciar sesión.');">
                                                         <i class="bi bi-toggle-on"></i>
                                                     </a>
                                                 </c:when>
@@ -126,7 +126,7 @@
                                                     <a href="${pageContext.request.contextPath}/UsuariosCont?accion=cambiarEstado&id=${u.idUsuarios}&activo=1" 
                                                        class="btn btn-success btn-sm" 
                                                        title="Activar"
-                                                       data-confirm-message="¿Deseas activar nuevamente a ${u.nombre}?">
+                                                       onclick="return confirm('¿Deseas activar nuevamente a ${u.nombre}?');">
                                                         <i class="bi bi-toggle-off"></i>
                                                     </a>
                                                 </c:otherwise>
@@ -147,6 +147,5 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <%@ include file="ConfirmModal.jsp" %>
 </body>
 </html>
