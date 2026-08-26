@@ -140,7 +140,7 @@
                     <thead>
                         <tr>
                             <th>ID Mov.</th>
-                            <th>ID Prod.</th>
+                            <th>Producto</th>
                             <th>Cantidad</th>
                             <th>Motivo</th>
                             <th>Fecha</th>
@@ -151,7 +151,7 @@
     <c:forEach var="m" items="${listaMov}">
         <tr>
             <td>${m.idMovimiento}</td>
-            <td>${m.idProducto}</td>
+            <td>${not empty m.nombreProducto ? m.nombreProducto : 'Producto eliminado'}</td>
             <td>${m.cantidad}</td>
             <td>${m.motivo}</td>
             <td>${m.fecha}</td>
