@@ -67,10 +67,77 @@ public class UsuariosCont extends HttpServlet {
                         response.sendRedirect("Vista/VerificarCodigo.jsp?status=error_codigo");
                     }
                     break;
+
+                // ---------- Acciones JSON para la app Flutter ----------
+
+                case "loginJson":
+                    response.setContentType("application/json;charset=UTF-8");
+                    String correoLogin = request.getParameter("correo");
+                    String contrasenaLogin = request.getParameter("contrasena");
+
+                    Usuarios userLogin = dao.validarLogin(correoLogin, contrasenaLogin);
+                    if (userLogin == null) {
+                        response.getWriter().print(jsonError("Correo o contraseña incorrectos"));
+                    } else if (userLogin.getActivo() != 1) {
+                        response.getWriter().print(jsonError("Tu cuenta aún no está verificada. Revisa tu correo."));
+                    } else {
+                        response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userLogin) + "}");
+                    }
+                    break;
+
+                case "tiposDocumentoJson":
+                    response.setContentType("application/json;charset=UTF-8");
+                    List<TiposDocumentos> tipos = dao.listarTiposDocumentoMayores();
+                    StringBuilder sbTipos = new StringBuilder("[");
+                    for (int i = 0; i < tipos.size(); i++) {
+                        TiposDocumentos t = tipos.get(i);
+                        if (i > 0) sbTipos.append(",");
+                        sbTipos.append("{\"id\":").append(t.getIdTipoDocumento())
+                               .append(",\"nombre\":\"").append(escaparJson(t.getNombre_documento())).append("\"}");
+                    }
+                    sbTipos.append("]");
+                    response.getWriter().print(sbTipos.toString());
+                    break;
+
+                case "verificarCodigoJson":
+                    response.setContentType("application/json;charset=UTF-8");
+                    String correoVer = request.getParameter("correo");
+                    String codigoVer = request.getParameter("codigo");
+
+                    boolean validoJson = dao.validarYActivarCuenta(correoVer, codigoVer);
+                    if (validoJson) {
+                        Usuarios userVer = dao.buscarPorEmail(correoVer);
+                        response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userVer) + "}");
+                    } else {
+                        response.getWriter().print(jsonError("Código incorrecto o expirado"));
+                    }
+                    break;
             }
         } else {
             response.sendRedirect("Vista/Panel.jsp");
         }
+    }
+
+    // ---------- Helpers JSON (usados por las acciones *Json) ----------
+
+    private String jsonError(String mensaje) {
+        return "{\"success\":false,\"error\":\"" + escaparJson(mensaje) + "\"}";
+    }
+
+    private String jsonUsuario(Usuarios u) {
+        return "{"
+                + "\"idUsuarios\":" + u.getIdUsuarios() + ","
+                + "\"nombre\":\"" + escaparJson(u.getNombre()) + "\","
+                + "\"apellido\":\"" + escaparJson(u.getApellido()) + "\","
+                + "\"correo\":\"" + escaparJson(u.getCorreo()) + "\","
+                + "\"telefono\":\"" + escaparJson(u.getTelefono()) + "\","
+                + "\"direccion\":\"" + escaparJson(u.getDireccion()) + "\""
+                + "}";
+    }
+
+    private String escaparJson(String texto) {
+        if (texto == null) return "";
+        return texto.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     @Override
@@ -153,6 +220,80 @@ public class UsuariosCont extends HttpServlet {
                     response.sendRedirect("Registro.jsp?status=error_sistema");
                 }
                 
+            } else if (accion.equalsIgnoreCase("registrarJson")) {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    String nombre = request.getParameter("nombre");
+                    String apellido = request.getParameter("apellido");
+                    String correo = request.getParameter("correo");
+                    String fechaNac = request.getParameter("fechaNacimiento");
+                    String numDoc = request.getParameter("numeroDocumento");
+                    String idTipoStr = request.getParameter("idTipoDocumento");
+                    String telefono = request.getParameter("telefono");
+                    String direccion = request.getParameter("direccion");
+                    String contrasena = request.getParameter("contrasena");
+
+                    if (nombre == null || nombre.trim().isEmpty()
+                            || apellido == null || apellido.trim().isEmpty()
+                            || correo == null || correo.trim().isEmpty()
+                            || fechaNac == null || fechaNac.trim().isEmpty()
+                            || numDoc == null || numDoc.trim().isEmpty()
+                            || idTipoStr == null || idTipoStr.trim().isEmpty()
+                            || contrasena == null || contrasena.length() < 8) {
+                        response.getWriter().print(jsonError(
+                                "Completa todos los campos obligatorios. La contraseña debe tener al menos 8 caracteres."));
+                        return;
+                    }
+                    if (numDoc.length() < 7 || numDoc.length() > 20) {
+                        response.getWriter().print(jsonError("El número de documento debe tener entre 7 y 20 caracteres."));
+                        return;
+                    }
+
+                    Usuarios nuevo = new Usuarios();
+                    nuevo.setNombre(nombre);
+                    nuevo.setApellido(apellido);
+                    nuevo.setCorreo(correo);
+                    nuevo.setFecha_nacimiento(fechaNac);
+                    nuevo.setIdTipoDocumento(Integer.parseInt(idTipoStr));
+                    nuevo.setNombre_documento(numDoc);
+                    nuevo.setTelefono(telefono);
+                    nuevo.setDireccion(direccion);
+                    nuevo.setIdRol(1); // Rol fijo: app de uso administrativo.
+                    nuevo.setContrasena(contrasena);
+
+                    int res = dao.registrar(nuevo);
+
+                    if (res > 0) {
+                        String codigoVerificacion = String.format("%06d", new java.util.Random().nextInt(999999));
+                        dao.actualizarCodigoVerificacion(correo, codigoVerificacion);
+
+                        new Thread(() -> {
+                            try {
+                                CorreoUtil.enviarCorreo(correo, codigoVerificacion);
+                            } catch (Exception e) {
+                                System.out.println("Aviso: No se pudo enviar el correo de fondo: " + e.getMessage());
+                            }
+                        }).start();
+
+                        response.getWriter().print(
+                                "{\"success\":true,\"correo\":\"" + escaparJson(correo)
+                                        + "\",\"mensaje\":\"Te enviamos un código de verificación a tu correo\"}");
+                    } else {
+                        response.getWriter().print(jsonError(
+                                "No se pudo completar el registro. Verifica que el correo o documento no estén ya registrados."));
+                    }
+                } catch (NumberFormatException e) {
+                    response.getWriter().print(jsonError("El tipo de documento seleccionado no es válido."));
+                } catch (Exception e) {
+                    String errorMsg = e.getMessage();
+                    if (errorMsg != null && errorMsg.contains("Duplicate entry")) {
+                        response.getWriter().print(jsonError("El correo o número de documento ya están registrados."));
+                    } else {
+                        System.out.println("❌ Error en doPost RegistrarJson: " + errorMsg);
+                        response.getWriter().print(jsonError("Error en el sistema al registrar."));
+                    }
+                }
+
             } else if (accion.equalsIgnoreCase("actualizar")) {
                 try {
                     int idUsuarios = Integer.parseInt(request.getParameter("idUsuarios"));
