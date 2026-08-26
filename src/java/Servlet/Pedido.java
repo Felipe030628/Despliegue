@@ -8,6 +8,7 @@ import Modelo.DetallePedido;
 import Modelo.Pedidos;
 import Modelo.Productos;
 import Util.FacturaPdfUtil;
+import Util.JsonUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -44,6 +45,79 @@ public class Pedido extends HttpServlet {
                 request.getRequestDispatcher("Vista/Pedidos.jsp").forward(request, response);
                 break;
 
+            // ---------- NUEVO: listado en JSON para la app Flutter (solo consulta) ----------
+            case "listarJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                List<Pedidos> lista = dao.listarPedidos();
+                StringBuilder sb = new StringBuilder("[");
+                for (int i = 0; i < lista.size(); i++) {
+                    Pedidos p = lista.get(i);
+                    if (i > 0) sb.append(",");
+                    sb.append("{")
+                      .append("\"idPedido\":").append(p.getIdPedido()).append(",")
+                      .append("\"cliente\":").append(JsonUtil.str(p.getCliente())).append(",")
+                      .append("\"mesa\":").append(JsonUtil.str(p.getMesa())).append(",")
+                      .append("\"fecha\":").append(JsonUtil.str(p.getFecha())).append(",")
+                      .append("\"estado\":").append(JsonUtil.str(p.getEstado())).append(",")
+                      .append("\"total\":").append(p.getTotal())
+                      .append("}");
+                }
+                sb.append("]");
+                response.getWriter().print(sb.toString());
+                break;
+            }
+
+            // ---------- NUEVO: detalle de un pedido (cabecera + líneas) en JSON ----------
+            case "detalleJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    int id = Integer.parseInt(request.getParameter("id"));
+                    Pedidos p = dao.listarPorId(id);
+                    List<DetallePedido> detalles = daoDetalle.listarPorPedido(id);
+
+                    StringBuilder det = new StringBuilder("[");
+                    for (int i = 0; i < detalles.size(); i++) {
+                        DetallePedido d = detalles.get(i);
+                        if (i > 0) det.append(",");
+                        det.append("{")
+                           .append("\"idProducto\":").append(d.getIdProducto()).append(",")
+                           .append("\"nombreProducto\":").append(JsonUtil.str(d.getNombreProducto())).append(",")
+                           .append("\"cantidad\":").append(d.getCantidad()).append(",")
+                           .append("\"precioUnitario\":").append(d.getPrecioUnitario()).append(",")
+                           .append("\"subtotal\":").append(d.getSubtotal())
+                           .append("}");
+                    }
+                    det.append("]");
+
+                    String json = "{"
+                            + "\"idPedido\":" + p.getIdPedido() + ","
+                            + "\"cliente\":" + JsonUtil.str(p.getCliente()) + ","
+                            + "\"mesa\":" + JsonUtil.str(p.getMesa()) + ","
+                            + "\"fecha\":" + JsonUtil.str(p.getFecha()) + ","
+                            + "\"estado\":" + JsonUtil.str(p.getEstado()) + ","
+                            + "\"total\":" + p.getTotal() + ","
+                            + "\"detalles\":" + det
+                            + "}";
+                    response.getWriter().print(json);
+                } catch (Exception e) {
+                    response.getWriter().print("{\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                }
+                break;
+            }
+
+            // ---------- NUEVO: eliminar devolviendo JSON en vez de redirigir ----------
+            case "eliminarJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    int idPedido = Integer.parseInt(request.getParameter("id"));
+                    dao.eliminarPedido(idPedido);
+                    response.getWriter().print("{\"success\":true}");
+                } catch (Exception e) {
+                    response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                }
+                break;
+            }
+
             case "guardar":
                 try {
                     String cliente = request.getParameter("cliente");
@@ -51,7 +125,6 @@ public class Pedido extends HttpServlet {
                     String fecha = request.getParameter("fecha");
                     String estado = "Pendiente";
 
-                    // Líneas de producto enviadas desde el carrito de la vista (arreglos paralelos)
                     String[] idsProducto = request.getParameterValues("productoId[]");
                     String[] cantidades = request.getParameterValues("cantidad[]");
 

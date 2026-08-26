@@ -4,8 +4,11 @@ import Controlador.ProductosDAO;
 import Controlador.CategoriaDAO;
 import Modelo.Productos;
 import Modelo.Categorias;
+import Util.JsonUtil;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -36,6 +39,50 @@ public class Producto extends HttpServlet {
                 // 3. Redirigimos a la vista
                 request.getRequestDispatcher("Vista/Productos.jsp").forward(request, response);
                 break;
+
+            // ---------- NUEVO: listado en JSON para la app Flutter (solo consulta) ----------
+            case "listarJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                List<Productos> listaProd = dao.listarProductos();
+                List<Categorias> cats = catDao.listar();
+                Map<Integer, String> catMap = new HashMap<>();
+                for (Categorias c : cats) {
+                    catMap.put(c.getIdCategorias(), c.getNombre_categoria());
+                }
+
+                StringBuilder sb = new StringBuilder("[");
+                for (int i = 0; i < listaProd.size(); i++) {
+                    Productos p = listaProd.get(i);
+                    if (i > 0) sb.append(",");
+                    int stock = dao.obtenerStock(p.getId());
+                    String nomCat = catMap.getOrDefault(p.getIdCategoria(), "");
+                    sb.append("{")
+                      .append("\"id\":").append(p.getId()).append(",")
+                      .append("\"nombre\":").append(JsonUtil.str(p.getNombre())).append(",")
+                      .append("\"precio\":").append(p.getPrecio()).append(",")
+                      .append("\"fecha_vencimiento\":").append(JsonUtil.str(p.getFecha_vencimiento())).append(",")
+                      .append("\"idCategoria\":").append(p.getIdCategoria()).append(",")
+                      .append("\"nomCategoria\":").append(JsonUtil.str(nomCat)).append(",")
+                      .append("\"stock\":").append(stock)
+                      .append("}");
+                }
+                sb.append("]");
+                response.getWriter().print(sb.toString());
+                break;
+            }
+
+            // ---------- NUEVO: eliminar devolviendo JSON en vez de redirigir ----------
+            case "eliminarJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    int id = Integer.parseInt(request.getParameter("id"));
+                    dao.eliminarProducto(id);
+                    response.getWriter().print("{\"success\":true}");
+                } catch (Exception e) {
+                    response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                }
+                break;
+            }
 
             case "nuevo":
                 List<Categorias> listaCatNuevo = catDao.listar();

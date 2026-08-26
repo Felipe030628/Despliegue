@@ -2,6 +2,7 @@ package Servlet;
 
 import Controlador.MesaDAO;
 import Modelo.Mesa;
+import Util.JsonUtil;
 import java.io.IOException;
 import java.util.List;
 import jakarta.servlet.ServletException;
@@ -27,6 +28,39 @@ public class Mesas extends HttpServlet {
                 request.setAttribute("listaMesas", lista);
                 request.getRequestDispatcher("Vista/Mesa.jsp").forward(request, response);
                 break;
+
+            // ---------- NUEVO: listado en JSON para la app Flutter (solo consulta) ----------
+            case "listarJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                List<Mesa> listaMesas = dao.listarMesas();
+                StringBuilder sb = new StringBuilder("[");
+                for (int i = 0; i < listaMesas.size(); i++) {
+                    Mesa m = listaMesas.get(i);
+                    if (i > 0) sb.append(",");
+                    sb.append("{")
+                      .append("\"idMesa\":").append(m.getIdMesa()).append(",")
+                      .append("\"numero_mesa\":").append(JsonUtil.str(m.getNumero_mesa())).append(",")
+                      .append("\"estado\":").append(JsonUtil.str(m.getEstado())).append(",")
+                      .append("\"capacidad\":").append(m.getCapacidad())
+                      .append("}");
+                }
+                sb.append("]");
+                response.getWriter().print(sb.toString());
+                break;
+            }
+
+            // ---------- NUEVO: eliminar devolviendo JSON en vez de redirigir ----------
+            case "eliminarJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    int idMesa = Integer.parseInt(request.getParameter("id"));
+                    dao.eliminarMesa(idMesa);
+                    response.getWriter().print("{\"success\":true}");
+                } catch (Exception e) {
+                    response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                }
+                break;
+            }
 
             case "guardar":
                 try {
@@ -56,7 +90,6 @@ public class Mesas extends HttpServlet {
                 } catch (Exception e) {
                     System.err.println("Error al eliminar mesa: " + e.getMessage());
                 }
-                // CORREGIDO: Redirige correctamente a "Mesas" en lugar de "MesasCont"
                 response.sendRedirect("Mesas?accion=listar");
                 break;
 
