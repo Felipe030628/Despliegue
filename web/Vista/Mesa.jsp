@@ -106,7 +106,7 @@
         <a href="${pageContext.request.contextPath}/Mesas?accion=eliminar&id=${m.idMesa}" 
    class="btn btn-danger btn-sm" 
    title="Eliminar"
-   onclick="return confirm('¿Estás seguro de que deseas eliminar esta mesa?');">
+   data-confirm-message="¿Estás seguro de que deseas eliminar esta mesa?">
     <i class="bi bi-trash-fill"></i>
 </a>
 </td>
@@ -117,6 +117,7 @@
             </div>
         </main>
     </div>
+    <%@ include file="confirmmodal.jsp" %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

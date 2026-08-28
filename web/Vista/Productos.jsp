@@ -153,7 +153,7 @@
                                             </a>
                                             <a href="${pageContext.request.contextPath}/Producto?accion=eliminar&id=${p.id}"
                                                class="btn-icon delete" title="Eliminar"
-                                               onclick="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                                               data-confirm-message="¿Estás seguro de que deseas eliminar este producto?">
                                                 <i class="bi bi-trash-fill"></i>
                                             </a>
                                         </td>
@@ -166,6 +166,7 @@
             </div>
         </main>
     </div>
+    <%@ include file="confirmmodal.jsp" %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="${pageContext.request.contextPath}/Vista/Js/Productos.js"></script>
 </body>

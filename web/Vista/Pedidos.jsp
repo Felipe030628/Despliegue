@@ -178,7 +178,7 @@
                                     <a href="${pageContext.request.contextPath}/Pedido?accion=eliminar&id=${p.idPedido}"
                                        class="btn btn-danger btn-sm"
                                        title="Eliminar (repone el stock)"
-                                       onclick="return confirm('¿Estás seguro de que deseas eliminar este pedido? El stock de sus productos será repuesto.');">
+                                       data-confirm-message="¿Estás seguro de que deseas eliminar este pedido? El stock de sus productos será repuesto.">
                                         <i class="bi bi-trash-fill"></i>
                                     </a>
                                 </td>
@@ -189,6 +189,7 @@
             </div>
         </main>
     </div>
+    <%@ include file="confirmmodal.jsp" %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="${pageContext.request.contextPath}/Vista/JavaScript/Pedidos.js"></script>
 </body>
