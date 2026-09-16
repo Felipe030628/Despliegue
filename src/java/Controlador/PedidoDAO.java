@@ -3,6 +3,8 @@ package Controlador;
 import Modelo.DetallePedido;
 import Modelo.Pedidos;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,6 +15,12 @@ public class PedidoDAO {
     Connection con;
     PreparedStatement ps;
     ResultSet rs;
+
+    // Zona horaria del negocio. Se usa para calcular "hoy" y "los últimos 7 días"
+    // en vez de confiar en CURDATE()/NOW() del servidor de base de datos, que puede
+    // estar corriendo en otra zona horaria (por ejemplo UTC) y desfasar las cifras
+    // varias horas cerca de la medianoche en Colombia.
+    private static final ZoneId ZONA_NEGOCIO = ZoneId.of("America/Bogota");
 
     public List<Pedidos> listarPedidos() {
         List<Pedidos> lista = new ArrayList<>();
@@ -150,16 +158,17 @@ public class PedidoDAO {
           + "STR_TO_DATE(fecha, '%Y-%m-%d')"
           + ")";
 
-    // Caja del día: suma SOLO los pedidos cuya fecha cae en el día de hoy.
-    // (Antes sumaba TODO el histórico de la tabla "pedidos", por eso el KPI
-    // "Caja del Día" no reflejaba realmente las ventas de hoy.)
+    // Caja del día: suma SOLO los pedidos cuya fecha cae en el día de hoy
+    // (calculado en la zona horaria del negocio, no en la del servidor de BD).
     public double obtenerTotalCajaHoy() {
         double total = 0;
+        String hoy = LocalDate.now(ZONA_NEGOCIO).toString(); // yyyy-MM-dd
         String sql = "SELECT SUM(total) FROM pedidos "
-                + "WHERE DATE(" + FECHA_PARSEADA + ") = CURDATE()";
+                + "WHERE DATE(" + FECHA_PARSEADA + ") = ?";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
+            ps.setString(1, hoy);
             rs = ps.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble(1);
@@ -172,18 +181,21 @@ public class PedidoDAO {
         return total;
     }
 
-    // Suma real de ventas (total de pedidos) agrupada por día, para los últimos 7 días.
-    // La clave del mapa es la fecha en formato "yyyy-MM-dd".
+    // Suma real de ventas (total de pedidos) agrupada por día, para los últimos 7 días
+    // (ventana calculada en la zona horaria del negocio). La clave del mapa es la
+    // fecha en formato "yyyy-MM-dd".
     public Map<String, Double> obtenerVentasUltimos7Dias() {
         Map<String, Double> ventasPorDia = new LinkedHashMap<>();
+        String desde = LocalDate.now(ZONA_NEGOCIO).minusDays(6).toString(); // yyyy-MM-dd
         String sql = "SELECT DATE(" + FECHA_PARSEADA + ") AS dia, SUM(total) AS totalDia "
                 + "FROM pedidos "
-                + "WHERE " + FECHA_PARSEADA + " >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) "
+                + "WHERE " + FECHA_PARSEADA + " >= ? "
                 + "GROUP BY dia "
                 + "ORDER BY dia ASC";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
+            ps.setString(1, desde);
             rs = ps.executeQuery();
             while (rs.next()) {
                 String dia = rs.getString("dia");

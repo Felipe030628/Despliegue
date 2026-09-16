@@ -5,6 +5,7 @@ import Controlador.PedidoDAO;
 import Controlador.ProductosDAO;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
@@ -30,6 +31,9 @@ public class DashboardData extends HttpServlet {
     private static final int UMBRAL_STOCK_CRITICO = 5;
     // Cuántos productos mostrar en el ranking de "Más Solicitados".
     private static final int TOP_PRODUCTOS_LIMITE = 5;
+    // Misma zona horaria de negocio usada en PedidoDAO, para que las etiquetas
+    // de los días (Jue, Vie, ...) coincidan con el mismo "hoy" que usan las cifras.
+    private static final ZoneId ZONA_NEGOCIO = ZoneId.of("America/Bogota");
 
     private final PedidoDAO pedidoDAO = new PedidoDAO();
     private final ProductosDAO productosDAO = new ProductosDAO();
@@ -51,7 +55,7 @@ public class DashboardData extends HttpServlet {
             Map<String, Double> ventasPorDia = pedidoDAO.obtenerVentasUltimos7Dias();
             StringBuilder labelsVentas = new StringBuilder();
             StringBuilder dataVentas = new StringBuilder();
-            LocalDate hoy = LocalDate.now();
+            LocalDate hoy = LocalDate.now(ZONA_NEGOCIO);
             for (int i = 6; i >= 0; i--) {
                 LocalDate dia = hoy.minusDays(i);
                 String clave = dia.toString(); // yyyy-MM-dd

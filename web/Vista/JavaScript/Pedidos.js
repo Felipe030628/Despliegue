@@ -20,6 +20,21 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    // ---- Autocompletar la fecha del pedido con "ahora" ----
+    // El campo venía vacío y el usuario tenía que escogerla a mano; si quedaba
+    // en un valor distinto al del día real (o simplemente se dejaba mal puesta),
+    // el pedido no aparecía en las estadísticas de "hoy" del Panel. Se deja
+    // editable por si necesitan registrar un pedido con otra fecha/hora.
+    (function autocompletarFechaPedido() {
+        const inputFecha = formPedido ? formPedido.querySelector('input[name="fecha"]') : null;
+        if (!inputFecha || inputFecha.value) return;
+
+        const ahora = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        const valorLocal = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+        inputFecha.value = valorLocal;
+    })();
+
     function productoSeleccionado() {
         const opt = selectProducto.options[selectProducto.selectedIndex];
         if (!opt || !opt.value) return null;
