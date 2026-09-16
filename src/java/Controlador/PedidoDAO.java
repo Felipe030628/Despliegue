@@ -138,16 +138,31 @@ public class PedidoDAO {
         return idPedidoGenerado;
     }
 
+    // Fila de fecha (columna "fecha") guardada como texto en distintos formatos posibles
+    // ("yyyy-MM-ddTHH:mm" desde el input datetime-local, o "yyyy-MM-dd HH:mm:ss" si viene
+    // de otra fuente/importación). Se prueban todos con COALESCE para no perder pedidos
+    // válidos solo porque el separador entre fecha y hora no coincide.
+    private static final String FECHA_PARSEADA =
+            "COALESCE("
+          + "STR_TO_DATE(fecha, '%Y-%m-%dT%H:%i'), "
+          + "STR_TO_DATE(fecha, '%Y-%m-%d %H:%i:%s'), "
+          + "STR_TO_DATE(fecha, '%Y-%m-%d %H:%i'), "
+          + "STR_TO_DATE(fecha, '%Y-%m-%d')"
+          + ")";
+
+    // Caja del día: suma SOLO los pedidos cuya fecha cae en el día de hoy.
+    // (Antes sumaba TODO el histórico de la tabla "pedidos", por eso el KPI
+    // "Caja del Día" no reflejaba realmente las ventas de hoy.)
     public double obtenerTotalCajaHoy() {
         double total = 0;
-        String sql = "SELECT SUM(total) FROM pedidos";  
+        String sql = "SELECT SUM(total) FROM pedidos "
+                + "WHERE DATE(" + FECHA_PARSEADA + ") = CURDATE()";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             if (rs.next()) {
                 total = rs.getDouble(1);
-                System.out.println("DEBUG: El total sin filtrar es: " + total);
             }
         } catch (Exception e) {
             System.out.println("Error en obtenerTotalCajaHoy: " + e.getMessage());
@@ -158,14 +173,12 @@ public class PedidoDAO {
     }
 
     // Suma real de ventas (total de pedidos) agrupada por día, para los últimos 7 días.
-    // La columna "fecha" se guarda como texto en formato datetime-local ("yyyy-MM-ddTHH:mm"),
-    // por eso se convierte explícitamente con STR_TO_DATE antes de agrupar/filtrar.
     // La clave del mapa es la fecha en formato "yyyy-MM-dd".
     public Map<String, Double> obtenerVentasUltimos7Dias() {
         Map<String, Double> ventasPorDia = new LinkedHashMap<>();
-        String sql = "SELECT DATE(STR_TO_DATE(fecha, '%Y-%m-%dT%H:%i')) AS dia, SUM(total) AS totalDia "
+        String sql = "SELECT DATE(" + FECHA_PARSEADA + ") AS dia, SUM(total) AS totalDia "
                 + "FROM pedidos "
-                + "WHERE STR_TO_DATE(fecha, '%Y-%m-%dT%H:%i') >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) "
+                + "WHERE " + FECHA_PARSEADA + " >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) "
                 + "GROUP BY dia "
                 + "ORDER BY dia ASC";
         try {

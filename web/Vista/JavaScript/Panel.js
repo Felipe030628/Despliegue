@@ -9,6 +9,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // Context path expuesto por Panel.jsp (window.APP_CONTEXT_PATH)
     const BASE_URL = window.APP_CONTEXT_PATH || "";
 
+    // ==========================================================
+    // 0. APP DE CLIENTES — QR de descarga
+    //    Cambia esta URL por el link real de la app (Play Store,
+    //    App Store, o la página de descarga del APK/Flutter Web).
+    // ==========================================================
+    const URL_APP_CLIENTES = "https://barstock.app/descargar";
+
+    const qrContainer = document.getElementById("appQrCode");
+    if (qrContainer && window.QRCode) {
+        new QRCode(qrContainer, {
+            text: URL_APP_CLIENTES,
+            width: 200,
+            height: 200,
+            colorDark: "#0a0809",
+            colorLight: "#e6c789",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    }
+    const appLinkEl = document.getElementById("appClientesLink");
+    if (appLinkEl) {
+        appLinkEl.textContent = URL_APP_CLIENTES;
+        appLinkEl.href = URL_APP_CLIENTES;
+    }
+
     // 1. RELOJ EN TIEMPO REAL (WIDGET LATERAL)
     const updateLiveTime = () => {
         const timeDisplay = document.getElementById("liveTime");
@@ -114,9 +138,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function actualizarGraficoVentas(d) {
         if (!mainSalesChart || !d.ventasSemana) return;
+        const data = d.ventasSemana.data || [];
         mainSalesChart.data.labels = d.ventasSemana.labels || [];
-        mainSalesChart.data.datasets[0].data = d.ventasSemana.data || [];
+        mainSalesChart.data.datasets[0].data = data;
         mainSalesChart.update();
+
+        // Aviso de "sin ventas" cuando el rango de 7 días viene en cero.
+        // Así se distingue un panel realmente sin pedidos de uno que no está conectado.
+        const aviso = document.getElementById('salesEmptyState');
+        if (aviso) {
+            const sinVentas = data.length === 0 || data.every(v => Number(v) === 0);
+            aviso.style.display = sinVentas ? 'flex' : 'none';
+        }
     }
 
     function actualizarCategorias(d) {

@@ -893,3 +893,110 @@ body {
         overflow: visible; opacity: 1;
     }
 }
+
+/* ============================================================
+   ESTADO VACÍO — Flujo de Ventas Semanal
+   Se muestra sobre la gráfica cuando los 7 días vienen en cero,
+   para diferenciar "sin pedidos todavía" de un panel roto.
+   ============================================================ */
+.chart-empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    padding: 0 20px;
+    background: linear-gradient(180deg, rgba(19,16,19,0.55) 0%, rgba(19,16,19,0.85) 100%);
+    border-radius: var(--radius);
+    pointer-events: none;
+}
+.chart-empty-state i {
+    font-size: 1.6rem;
+    color: var(--gold-dim);
+}
+.chart-empty-state p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    max-width: 320px;
+}
+
+/* ============================================================
+   WIDGET — Nuestra App de Clientes (QR de descarga)
+   ============================================================ */
+.app-promo-widget {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+}
+.app-promo-text { flex: 1 1 320px; min-width: 260px; }
+.app-promo-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 10px;
+}
+.app-promo-desc {
+    color: var(--ink-muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    max-width: 480px;
+    margin: 0 0 16px;
+}
+.app-promo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gold-soft);
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold-dim);
+    padding-bottom: 2px;
+    transition: color .25s var(--ease), border-color .25s var(--ease);
+}
+.app-promo-link:hover { color: var(--gold); border-color: var(--gold); }
+
+.app-promo-qr {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+.app-promo-qr-frame {
+    background: var(--gold-soft);
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--gold-dim);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+    line-height: 0;
+}
+.app-promo-qr-frame img,
+.app-promo-qr-frame canvas,
+.app-promo-qr-frame table {
+    display: block;
+    width: 200px !important;
+    height: 200px !important;
+}
+.app-promo-qr-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    letter-spacing: 0.4px;
+    color: var(--gold-soft);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
+    .app-promo-widget { justify-content: center; text-align: center; }
+    .app-promo-desc { margin-left: auto; margin-right: auto; }
+}

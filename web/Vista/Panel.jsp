@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/Vista/Css/Panel.css">
 </head>
@@ -243,6 +244,10 @@
                         </div>
                         <div class="chart-container">
                             <canvas id="mainSalesChart"></canvas>
+                            <div id="salesEmptyState" class="chart-empty-state" style="display:none;">
+                                <i class="bi bi-receipt-cutoff"></i>
+                                <p>Aún no hay pedidos registrados en los últimos 7 días.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -296,6 +301,34 @@
                         <ul class="premium-list-items" id="topProductosList">
                             <li><small class="text-muted">Cargando productos...</small></li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-12">
+                    <div class="dashboard-widget app-promo-widget">
+                        <div class="app-promo-text">
+                            <div class="widget-header">
+                                <h5>Nuestra App de Clientes</h5>
+                            </div>
+                            <p class="app-promo-title">Pide desde la mesa, en segundos</p>
+                            <p class="app-promo-desc">
+                                Escanea el código con la cámara de tu celular y descarga nuestra app de
+                                clientes para ver el menú, hacer pedidos y seguir su estado en tiempo real.
+                            </p>
+                            <a id="appClientesLink" class="app-promo-link" href="#" target="_blank" rel="noopener">
+                                barstock.app/descargar
+                            </a>
+                        </div>
+                        <div class="app-promo-qr">
+                            <div class="app-promo-qr-frame">
+                                <div id="appQrCode"></div>
+                            </div>
+                            <span class="app-promo-qr-caption">
+                                <i class="bi bi-qr-code-scan"></i> Descarga nuestra app
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
