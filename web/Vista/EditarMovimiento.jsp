@@ -12,6 +12,9 @@
 <body>
     <div class="dashboard-container">
         <!-- Sidebar completo -->
+        <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" type="button" aria-label="Mostrar u ocultar menú" aria-expanded="true">
+            <i class="bi bi-chevron-left"></i>
+        </button>
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h3>BarStock</h3>
@@ -22,10 +25,10 @@
                     <a href="${pageContext.request.contextPath}/Vista/Panel.jsp"><i class="bi bi-sliders me-2"></i> Dashboard</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuInventario">
+                    <a class="dropdown-toggle" href="#" role="button" data-toggle="submenu" data-target="#menuInventario">
                         <i class="bi bi-box-seam me-2"></i> Inventario
                     </a>
-                    <ul class="collapse list-unstyled ps-3 show" id="menuInventario">
+                    <ul class="submenu list-unstyled ps-3 show" id="menuInventario">
                         <li><a href="${pageContext.request.contextPath}/Producto?accion=listar">Productos</a></li>
                         <li><a href="${pageContext.request.contextPath}/Movimiento?accion=listar"><i class="bi bi-arrow-left-right me-3"></i> Movimientos Stock</a></li>
                     </ul>
@@ -82,5 +85,6 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="${pageContext.request.contextPath}/Vista/JavaScript/Sidebar.js"></script>
 </body>
 </html>

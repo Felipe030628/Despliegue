@@ -12,6 +12,9 @@
 </head>
 <body>
     <div class="dashboard-container">
+        <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" type="button" aria-label="Mostrar u ocultar menú" aria-expanded="true">
+            <i class="bi bi-chevron-left"></i>
+        </button>
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h3>BarStock</h3>
@@ -29,11 +32,11 @@
             <ul class="sidebar-menu">
                 <!-- Menú Desplegable: Inventario -->
                 <li class="nav-item dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse"
-                       data-bs-target="#menuInventario" aria-expanded="true">
+                    <a class="dropdown-toggle" href="#" role="button" data-toggle="submenu"
+                       data-target="#menuInventario" aria-expanded="true">
                         <i class="bi bi-box-seam"></i> Inventario
                     </a>
-                    <ul class="collapse show" id="menuInventario">
+                    <ul class="submenu show" id="menuInventario">
                         <li>
                             <a href="${pageContext.request.contextPath}/Producto?accion=listar" class="active">Productos</a>
                         </li>
@@ -47,10 +50,10 @@
 
                 <!-- Menú Desplegable: Gestión de Pedidos -->
                 <li class="nav-item dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuPedidos">
+                    <a class="dropdown-toggle" href="#" role="button" data-toggle="submenu" data-target="#menuPedidos">
                         <i class="bi bi-cart-check"></i> Pedidos
                     </a>
-                    <ul class="collapse" id="menuPedidos">
+                    <ul class="submenu" id="menuPedidos">
                         <li>
                             <a href="${pageContext.request.contextPath}/Pedido?accion=listar">
                                 <i class="bi bi-cart"></i> Pedidos
@@ -169,5 +172,6 @@
     <%@ include file="confirmmodal.jsp" %>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="${pageContext.request.contextPath}/Vista/Js/Productos.js"></script>
+    <script src="${pageContext.request.contextPath}/Vista/JavaScript/Sidebar.js"></script>
 </body>
 </html>

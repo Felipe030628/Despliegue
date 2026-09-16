@@ -33,6 +33,10 @@
 
     <div class="dashboard-container">
 
+        <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" type="button" aria-label="Mostrar u ocultar menú" aria-expanded="true">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h3>BarStock</h3>
@@ -45,20 +49,20 @@
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuInventario">
+                    <a class="dropdown-toggle" href="#" role="button" data-toggle="submenu" data-target="#menuInventario">
                         <i class="bi bi-box-seam me-2"></i> Inventario
                     </a>
-                    <ul class="collapse list-unstyled ps-3" id="menuInventario">
+                    <ul class="submenu list-unstyled ps-3" id="menuInventario">
                         <li><a href="${pageContext.request.contextPath}/Producto?accion=listar">Productos</a></li>
                         <li><a href="${pageContext.request.contextPath}/Movimiento?accion=listar"><i class="bi bi-arrow-left-right me-3"></i> Movimientos Stock</a></li>
                     </ul>
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="collapse" data-bs-target="#menuPedidos">
+                    <a class="dropdown-toggle" href="#" role="button" data-toggle="submenu" data-target="#menuPedidos">
                         <i class="bi bi-cart-check me-2"></i> Pedidos
                     </a>
-                    <ul class="collapse list-unstyled ps-3" id="menuPedidos">
+                    <ul class="submenu list-unstyled ps-3" id="menuPedidos">
                         <li><a href="${pageContext.request.contextPath}/Pedido?accion=listar">
                         <i class="bi bi-cart me-3"></i> Pedidos
                     </a></li>
@@ -307,6 +311,7 @@
         window.APP_CONTEXT_PATH = '${pageContext.request.contextPath}';
     </script>
     <script src="${pageContext.request.contextPath}/Vista/JavaScript/Panel.js"></script>
+    <script src="${pageContext.request.contextPath}/Vista/JavaScript/Sidebar.js"></script>
 
     <script>
         // ---- Pantalla de carga: se oculta cuando el panel ya está listo ----

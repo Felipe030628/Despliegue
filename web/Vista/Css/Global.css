@@ -75,6 +75,46 @@ body {
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    transition: width .3s var(--ease), padding .3s var(--ease), opacity .25s var(--ease);
+}
+
+/* ---- Botón para colapsar/expandir toda la barra lateral ---- */
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 40px;
+    left: 252px;
+    z-index: 1200;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--panel-line);
+    background: var(--void);
+    color: var(--gold-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    transition: left .3s var(--ease), background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.sidebar-toggle-btn:hover { background-color: rgba(201,160,89,0.14); color: var(--gold); border-color: var(--gold-dim); }
+.sidebar-toggle-btn i { transition: transform .3s var(--ease); display: block; }
+
+/* ---- Barra lateral colapsada (oculta) ---- */
+.dashboard-container.sidebar-collapsed .sidebar {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-right: none;
+    overflow: hidden;
+    opacity: 0;
+}
+.dashboard-container.sidebar-collapsed .sidebar-toggle-btn {
+    left: 14px;
+}
+.dashboard-container.sidebar-collapsed .sidebar-toggle-btn i {
+    transform: rotate(180deg);
 }
 
 .sidebar-header { text-align: center; margin-bottom: 36px; padding-bottom: 26px; position: relative; }
@@ -151,16 +191,18 @@ body {
 }
 .sidebar-menu .dropdown-toggle[aria-expanded="true"]::after { transform: rotate(90deg); }
 
-.sidebar-menu ul.collapse,
-.sidebar-menu ul.collapsing {
+.sidebar-menu ul.submenu {
     list-style: none;
     padding-left: 22px !important;
     margin: 4px 0 4px 22px;
     border-left: 1px solid var(--panel-line);
     display: flex; flex-direction: column; gap: 2px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s var(--ease);
 }
-.sidebar-menu ul.collapse li a,
-.sidebar-menu ul.collapsing li a { padding: 9px 12px; font-size: 0.78rem; }
+.sidebar-menu ul.submenu.show { max-height: 500px; }
+.sidebar-menu ul.submenu li a { padding: 9px 12px; font-size: 0.78rem; }
 
 .logout-link { color: var(--ink-faint) !important; }
 .logout-link:hover { color: var(--wine-bright) !important; background-color: var(--wine-dim) !important; }
@@ -467,4 +509,9 @@ body {
     .dashboard-container { flex-direction: column; }
     .sidebar { width: 100%; height: auto; position: relative; }
     .main-content { padding: 24px; }
+    .sidebar-toggle-btn { display: none; }
+    .dashboard-container.sidebar-collapsed .sidebar {
+        width: 100%; padding: 34px 18px; border-right: 1px solid var(--panel-line);
+        overflow: visible; opacity: 1;
+    }
 }

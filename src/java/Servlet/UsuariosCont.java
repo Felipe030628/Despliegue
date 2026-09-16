@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import Controlador.CorreoUtil;
+import Util.JsonUtil;
 
 @WebServlet(name = "UsuariosCont", urlPatterns = {"/UsuariosCont"})
 public class UsuariosCont extends HttpServlet {
@@ -72,46 +73,108 @@ public class UsuariosCont extends HttpServlet {
 
                 case "loginJson":
                     response.setContentType("application/json;charset=UTF-8");
-                    String correoLogin = request.getParameter("correo");
-                    String contrasenaLogin = request.getParameter("contrasena");
+                    try {
+                        String correoLogin = request.getParameter("correo");
+                        String contrasenaLogin = request.getParameter("contrasena");
 
-                    Usuarios userLogin = dao.validarLogin(correoLogin, contrasenaLogin);
-                    if (userLogin == null) {
-                        response.getWriter().print(jsonError("Correo o contraseña incorrectos"));
-                    } else if (userLogin.getActivo() != 1) {
-                        response.getWriter().print(jsonError("Tu cuenta aún no está verificada. Revisa tu correo."));
-                    } else {
-                        response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userLogin) + "}");
+                        Usuarios userLogin = dao.validarLogin(correoLogin, contrasenaLogin);
+                        if (userLogin == null) {
+                            response.getWriter().print(jsonError("Correo o contraseña incorrectos"));
+                        } else if (userLogin.getActivo() != 1) {
+                            response.getWriter().print(jsonError("Tu cuenta aún no está verificada. Revisa tu correo."));
+                        } else {
+                            response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userLogin) + "}");
+                        }
+                    } catch (Exception e) {
+                        response.getWriter().print(jsonError("Error en el servidor al iniciar sesión: " + e.getMessage()));
                     }
                     break;
 
                 case "tiposDocumentoJson":
                     response.setContentType("application/json;charset=UTF-8");
-                    List<TiposDocumentos> tipos = dao.listarTiposDocumentoMayores();
-                    StringBuilder sbTipos = new StringBuilder("[");
-                    for (int i = 0; i < tipos.size(); i++) {
-                        TiposDocumentos t = tipos.get(i);
-                        if (i > 0) sbTipos.append(",");
-                        sbTipos.append("{\"id\":").append(t.getIdTipoDocumento())
-                               .append(",\"nombre\":\"").append(escaparJson(t.getNombre_documento())).append("\"}");
+                    try {
+                        List<TiposDocumentos> tipos = dao.listarTiposDocumentoMayores();
+                        StringBuilder sbTipos = new StringBuilder("[");
+                        for (int i = 0; i < tipos.size(); i++) {
+                            TiposDocumentos t = tipos.get(i);
+                            if (i > 0) sbTipos.append(",");
+                            sbTipos.append("{\"id\":").append(t.getIdTipoDocumento())
+                                   .append(",\"nombre\":\"").append(escaparJson(t.getNombre_documento())).append("\"}");
+                        }
+                        sbTipos.append("]");
+                        response.getWriter().print(sbTipos.toString());
+                    } catch (Exception e) {
+                        response.getWriter().print("[]");
                     }
-                    sbTipos.append("]");
-                    response.getWriter().print(sbTipos.toString());
                     break;
 
                 case "verificarCodigoJson":
                     response.setContentType("application/json;charset=UTF-8");
-                    String correoVer = request.getParameter("correo");
-                    String codigoVer = request.getParameter("codigo");
+                    try {
+                        String correoVer = request.getParameter("correo");
+                        String codigoVer = request.getParameter("codigo");
 
-                    boolean validoJson = dao.validarYActivarCuenta(correoVer, codigoVer);
-                    if (validoJson) {
-                        Usuarios userVer = dao.buscarPorEmail(correoVer);
-                        response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userVer) + "}");
-                    } else {
-                        response.getWriter().print(jsonError("Código incorrecto o expirado"));
+                        boolean validoJson = dao.validarYActivarCuenta(correoVer, codigoVer);
+                        if (validoJson) {
+                            Usuarios userVer = dao.buscarPorEmail(correoVer);
+                            response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userVer) + "}");
+                        } else {
+                            response.getWriter().print(jsonError("Código incorrecto o expirado"));
+                        }
+                    } catch (Exception e) {
+                        response.getWriter().print(jsonError("Error al verificar código: " + e.getMessage()));
                     }
                     break;
+
+                // ---------- Listado en JSON para Flutter asegurando manejo de errores ----------
+                case "listarJson": {
+                    response.setContentType("application/json;charset=UTF-8");
+                    try {
+                        List<Usuarios> listaJson = dao.listarUsuarios();
+                        StringBuilder sbLista = new StringBuilder("[");
+                        if (listaJson != null) {
+                            for (int i = 0; i < listaJson.size(); i++) {
+                                if (i > 0) sbLista.append(",");
+                                sbLista.append(jsonUsuario(listaJson.get(i)));
+                            }
+                        }
+                        sbLista.append("]");
+                        response.getWriter().print(sbLista.toString());
+                    } catch (Exception e) {
+                        System.out.println("❌ Error en listarJson: " + e.getMessage());
+                        response.getWriter().print("[]");
+                    }
+                    break;
+                }
+
+                case "eliminarJson": {
+                    response.setContentType("application/json;charset=UTF-8");
+                    try {
+                        int idElimJson = Integer.parseInt(request.getParameter("id"));
+                        dao.eliminar(idElimJson);
+                        response.getWriter().print("{\"success\":true}");
+                    } catch (Exception e) {
+                        response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                    }
+                    break;
+                }
+
+                case "cambiarEstadoJson": {
+                    response.setContentType("application/json;charset=UTF-8");
+                    try {
+                        int idEstadoJson = Integer.parseInt(request.getParameter("id"));
+                        int nuevoEstadoJson = Integer.parseInt(request.getParameter("activo"));
+                        boolean ok = dao.cambiarEstado(idEstadoJson, nuevoEstadoJson);
+                        if (ok) {
+                            response.getWriter().print("{\"success\":true}");
+                        } else {
+                            response.getWriter().print(jsonError("No se pudo cambiar el estado del empleado."));
+                        }
+                    } catch (Exception e) {
+                        response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                    }
+                    break;
+                }
             }
         } else {
             response.sendRedirect("Vista/Panel.jsp");
@@ -127,11 +190,16 @@ public class UsuariosCont extends HttpServlet {
     private String jsonUsuario(Usuarios u) {
         return "{"
                 + "\"idUsuarios\":" + u.getIdUsuarios() + ","
-                + "\"nombre\":\"" + escaparJson(u.getNombre()) + "\","
-                + "\"apellido\":\"" + escaparJson(u.getApellido()) + "\","
-                + "\"correo\":\"" + escaparJson(u.getCorreo()) + "\","
-                + "\"telefono\":\"" + escaparJson(u.getTelefono()) + "\","
-                + "\"direccion\":\"" + escaparJson(u.getDireccion()) + "\""
+                + "\"nombre\":" + JsonUtil.str(u.getNombre()) + ","
+                + "\"apellido\":" + JsonUtil.str(u.getApellido()) + ","
+                + "\"correo\":" + JsonUtil.str(u.getCorreo()) + ","
+                + "\"telefono\":" + JsonUtil.str(u.getTelefono()) + ","
+                + "\"direccion\":" + JsonUtil.str(u.getDireccion()) + ","
+                + "\"fecha_nacimiento\":" + JsonUtil.str(u.getFecha_nacimiento()) + ","
+                + "\"idTipoDocumento\":" + u.getIdTipoDocumento() + ","
+                + "\"nombre_documento\":" + JsonUtil.str(u.getNombre_documento()) + ","
+                + "\"idRol\":" + u.getIdRol() + ","
+                + "\"activo\":" + u.getActivo()
                 + "}";
     }
 
@@ -160,7 +228,6 @@ public class UsuariosCont extends HttpServlet {
                     String contrasenaConfirm = request.getParameter("txtpassConfirm");
                     String terminos = request.getParameter("txtterminos");
 
-                    // Validación de contraseña y aceptación de términos (defensa en servidor)
                     if (contrasena == null || contrasena.length() < 8) {
                         response.sendRedirect("Registro.jsp?status=error_pass_corta");
                         return;
@@ -175,7 +242,6 @@ public class UsuariosCont extends HttpServlet {
                     }
 
                     int idTipoDocumento = Integer.parseInt(request.getParameter("txtIdTipoDoc")); 
-                    // Rol fijo: esta aplicación es de uso exclusivamente administrativo.
                     int idRol = 1;
                     
                     u.setNombre(nombre);
@@ -192,13 +258,9 @@ public class UsuariosCont extends HttpServlet {
                     int res = dao.registrar(u);
                     
                     if (res > 0) {
-                        // 1. Generar un código aleatorio de 6 dígitos
                         String codigoVerificacion = String.format("%06d", new java.util.Random().nextInt(999999));
-                        
-                        // 2. Guardarlo en la BD asociado al correo
                         dao.actualizarCodigoVerificacion(correo, codigoVerificacion);
                         
-                        // 3. Guardar el correo en sesión y enviar el correo en un hilo independiente (evita congelamientos)
                         request.getSession().setAttribute("correoVerificar", correo);
                         
                         new Thread(() -> {
@@ -209,7 +271,6 @@ public class UsuariosCont extends HttpServlet {
                             }
                         }).start();
                         
-                        // 4. Redirigir de inmediato a la vista de verificación sin quedarse bloqueado
                         response.sendRedirect("Vista/VerificarCodigo.jsp?status=enviado");
                         
                     } else {
@@ -240,8 +301,7 @@ public class UsuariosCont extends HttpServlet {
                             || numDoc == null || numDoc.trim().isEmpty()
                             || idTipoStr == null || idTipoStr.trim().isEmpty()
                             || contrasena == null || contrasena.length() < 8) {
-                        response.getWriter().print(jsonError(
-                                "Completa todos los campos obligatorios. La contraseña debe tener al menos 8 caracteres."));
+                        response.getWriter().print(jsonError("Completa todos los campos obligatorios. La contraseña debe tener al menos 8 caracteres."));
                         return;
                     }
                     if (numDoc.length() < 7 || numDoc.length() > 20) {
@@ -258,7 +318,7 @@ public class UsuariosCont extends HttpServlet {
                     nuevo.setNombre_documento(numDoc);
                     nuevo.setTelefono(telefono);
                     nuevo.setDireccion(direccion);
-                    nuevo.setIdRol(1); // Rol fijo: app de uso administrativo.
+                    nuevo.setIdRol(1);
                     nuevo.setContrasena(contrasena);
 
                     int res = dao.registrar(nuevo);
@@ -275,12 +335,9 @@ public class UsuariosCont extends HttpServlet {
                             }
                         }).start();
 
-                        response.getWriter().print(
-                                "{\"success\":true,\"correo\":\"" + escaparJson(correo)
-                                        + "\",\"mensaje\":\"Te enviamos un código de verificación a tu correo\"}");
+                        response.getWriter().print("{\"success\":true,\"correo\":\"" + escaparJson(correo) + "\",\"mensaje\":\"Te enviamos un código de verificación a tu correo\"}");
                     } else {
-                        response.getWriter().print(jsonError(
-                                "No se pudo completar el registro. Verifica que el correo o documento no estén ya registrados."));
+                        response.getWriter().print(jsonError("No se pudo completar el registro. Verifica que el correo o documento no estén ya registrados."));
                     }
                 } catch (NumberFormatException e) {
                     response.getWriter().print(jsonError("El tipo de documento seleccionado no es válido."));
@@ -302,10 +359,6 @@ public class UsuariosCont extends HttpServlet {
                     String telefono = request.getParameter("telefono");
                     String direccion = request.getParameter("direccion");
 
-                    // Nota de seguridad: correo, contraseña y documento son datos esenciales
-                    // y NO se actualizan aquí, aunque el cliente los envíe en el formulario.
-                    // - correo/documento: identifican al usuario y su acceso al sistema.
-                    // - contraseña: solo se cambia mediante el flujo de recuperación por correo.
                     Usuarios usuAct = new Usuarios();
                     usuAct.setIdUsuarios(idUsuarios);
                     usuAct.setNombre(nombre);
@@ -319,6 +372,37 @@ public class UsuariosCont extends HttpServlet {
                 } catch (Exception e) {
                     System.out.println("❌ Error en doPost Actualizar: " + e.getMessage());
                     response.sendRedirect("UsuariosCont?accion=listar&status=error_actualizar");
+                }
+
+            } else if (accion.equalsIgnoreCase("actualizarJson")) {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    int idUsuariosJson = Integer.parseInt(request.getParameter("idUsuarios"));
+                    String nombreJson = request.getParameter("nombre");
+                    String apellidoJson = request.getParameter("apellido");
+                    String telefonoJson = request.getParameter("telefono");
+                    String direccionJson = request.getParameter("direccion");
+
+                    if (nombreJson == null || nombreJson.trim().isEmpty()
+                            || apellidoJson == null || apellidoJson.trim().isEmpty()) {
+                        response.getWriter().print(jsonError("Nombre y apellido son obligatorios."));
+                        return;
+                    }
+
+                    Usuarios usuActJson = new Usuarios();
+                    usuActJson.setIdUsuarios(idUsuariosJson);
+                    usuActJson.setNombre(nombreJson);
+                    usuActJson.setApellido(apellidoJson);
+                    usuActJson.setTelefono(telefonoJson);
+                    usuActJson.setDireccion(direccionJson);
+
+                    dao.actualizarDatosBasicos(usuActJson);
+
+                    Usuarios actualizado = dao.listarPorId(idUsuariosJson);
+                    response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(actualizado) + "}");
+                } catch (Exception e) {
+                    System.out.println("❌ Error en doPost ActualizarJson: " + e.getMessage());
+                    response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
                 }
             }
         }
