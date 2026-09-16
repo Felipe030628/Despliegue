@@ -31,8 +31,18 @@ public class ServletLogin extends HttpServlet {
             // Verificamos si el usuario está activo (asumiendo que getEstado() o getActivo() retorna 1 o true)
             // Ajusta "user.getActivo() == 1" según como tengas definido tu campo en el Modelo
             if (user.getActivo() == 1) { 
-                HttpSession session = request.getSession();
+                // Protección contra "session fixation": si ya existía una sesión
+                // (por ejemplo anónima, de antes de iniciar sesión) se invalida y
+                // se crea una completamente nueva para el usuario autenticado, en
+                // vez de reutilizar el mismo ID de sesión.
+                HttpSession sesionAnterior = request.getSession(false);
+                if (sesionAnterior != null) {
+                    sesionAnterior.invalidate();
+                }
+                HttpSession session = request.getSession(true);
                 session.setAttribute("usuarioLogueado", user);
+                // Cierre de sesión automático tras 30 min de inactividad
+                session.setMaxInactiveInterval(30 * 60);
                 response.sendRedirect(request.getContextPath() + "/Vista/Panel.jsp");
             } else {
                 // Si está inactivo, bloqueamos el acceso y mandamos mensaje

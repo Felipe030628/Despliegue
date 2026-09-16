@@ -82,7 +82,7 @@
                 </li>
 
                 <li class="mt-5">
-                    <a href="${pageContext.request.contextPath}/index.jsp" class="logout-link">
+                    <a href="${pageContext.request.contextPath}/Logout" class="logout-link">
                         <i class="bi bi-power me-2"></i> Cerrar Sesión
                     </a>
                 </li>

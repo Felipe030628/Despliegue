@@ -91,6 +91,13 @@ public class Registro extends HttpServlet {
                     return;
                 }
 
+                // 4b. La contraseña debe tener un mínimo de seguridad razonable
+                if (contrasena.length() < 8) {
+                    request.setAttribute("mensaje", "La contraseña debe tener al menos 8 caracteres.");
+                    request.getRequestDispatcher("Registro.jsp").forward(request, response);
+                    return;
+                }
+
                 // Instanciamos el Modelo y el DAO
                 Usuarios u = new Usuarios();
                 UsuariosDAO udao = new UsuariosDAO();

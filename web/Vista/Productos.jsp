@@ -76,7 +76,7 @@
 
             <ul class="sidebar-menu mt-5">
                 <li>
-                    <a href="${pageContext.request.contextPath}/index.jsp" class="logout-link">
+                    <a href="${pageContext.request.contextPath}/Logout" class="logout-link">
                         <i class="bi bi-power"></i> Cerrar Sesión
                     </a>
                 </li>

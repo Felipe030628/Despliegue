@@ -22,6 +22,23 @@
         <url-pattern>/Productos</url-pattern>
     </servlet-mapping>
 
+    <!-- Seguridad de la sesión:
+         - session-timeout: cierra la sesión sola tras 30 min sin actividad.
+         - http-only: la cookie de sesión no puede leerse desde JavaScript
+           (mitiga robo de sesión vía XSS).
+         - secure: si la app se sirve SIEMPRE por HTTPS en producción (por
+           ejemplo detrás de Railway/un proxy con TLS), descomenta la línea
+           <secure>true</secure> para que la cookie de sesión nunca viaje sin
+           cifrar. Se deja comentada para no romper pruebas locales por
+           HTTP sin TLS. -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+            <!-- <secure>true</secure> -->
+        </cookie-config>
+    </session-config>
+
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>

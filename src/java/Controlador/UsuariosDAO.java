@@ -2,6 +2,7 @@ package Controlador;
 
 import Modelo.Usuarios;
 import Modelo.TiposDocumentos;
+import Util.PasswordUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,29 +16,60 @@ public class UsuariosDAO {
     PreparedStatement ps;
     ResultSet rs;
 
-    // 1. Validar Login (Actualizado para validar contra el campo activo si lo requieres, o sin columnas inexistentes)
+    // 1. Validar Login
+    // IMPORTANTE: la contraseña ya NO se compara en la consulta SQL (eso obligaba a
+    // guardarla en texto plano). Ahora se busca el usuario solo por correo y la
+    // contraseña se valida en Java contra el hash (PBKDF2) guardado en la BD.
+    //
+    // Migración transparente: si la cuenta todavía tiene la contraseña antigua en
+    // texto plano (creada antes de este cambio), se sigue aceptando el login por
+    // compatibilidad, pero justo después se recalcula y guarda el hash, de forma
+    // que a partir de ese momento la cuenta queda protegida sin que el usuario
+    // tenga que hacer nada.
     public Usuarios validarLogin(String correo, String password) {
-        Usuarios user = null;
-        String sql = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
-    
+        if (correo == null || password == null) {
+            return null;
+        }
+
+        Usuarios user = buscarPorEmail(correo);
+        if (user == null) {
+            return null;
+        }
+
+        String almacenada = user.getContrasena();
+        if (almacenada == null) {
+            return null;
+        }
+
+        boolean credencialesValidas;
+
+        if (PasswordUtil.esHashValido(almacenada)) {
+            credencialesValidas = PasswordUtil.verificar(password, almacenada);
+        } else {
+            // Cuenta antigua: contraseña aún en texto plano
+            credencialesValidas = almacenada.equals(password);
+            if (credencialesValidas) {
+                guardarHashDirecto(correo, PasswordUtil.hash(password));
+            }
+        }
+
+        return credencialesValidas ? user : null;
+    }
+
+    // Guarda un hash ya calculado directamente (uso interno: migración de cuentas antiguas)
+    private void guardarHashDirecto(String correo, String hash) {
+        String sql = "UPDATE usuarios SET contrasena = ? WHERE correo = ?";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
-            ps.setString(1, correo);
-            ps.setString(2, password);
-            rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                user = mapearUsuario(rs);
-            }
+            ps.setString(1, hash);
+            ps.setString(2, correo);
+            ps.executeUpdate();
         } catch (Exception e) {
-            System.err.println("--- ERROR DIRECTO EN EL DAO --- " + e.getMessage());
-            e.printStackTrace();
+            System.out.println("❌ Error al migrar contraseña a hash: " + e.getMessage());
         } finally {
             cerrarRecursos();
         }
-    
-        return user;
     }
 
     // 2. Registrar Usuario
@@ -55,7 +87,10 @@ public class UsuariosDAO {
             ps.setString(6, u.getNombre_documento());
             ps.setString(7, u.getTelefono());
             ps.setString(8, u.getDireccion());
-            ps.setString(9, u.getContrasena());
+            // La contraseña nunca se guarda en texto plano: se hashea aquí, en el
+            // único punto de entrada de altas, para que ningún servlet pueda
+            // "olvidarse" de protegerla.
+            ps.setString(9, PasswordUtil.hash(u.getContrasena()));
             ps.setInt(10, u.getIdRol());
             r = ps.executeUpdate();
         } catch (Exception e) {
@@ -167,7 +202,13 @@ public class UsuariosDAO {
             ps.setString(1, u.getNombre());
             ps.setString(2, u.getApellido());
             ps.setString(3, u.getCorreo());
-            ps.setString(4, u.getContrasena());
+            // Igual que en el registro: nunca se guarda en texto plano. Si no se
+            // proporciona una contraseña nueva, se conserva la que ya tenía en BD
+            // en lugar de sobrescribirla con un valor vacío.
+            String contrasenaFinal = (u.getContrasena() == null || u.getContrasena().isEmpty())
+                    ? obtenerContrasenaActual(u.getIdUsuarios())
+                    : PasswordUtil.hash(u.getContrasena());
+            ps.setString(4, contrasenaFinal);
             ps.setInt(5, u.getIdTipoDocumento());
             ps.setString(6, u.getNombre_documento());
             ps.setString(7, u.getTelefono());
@@ -175,11 +216,32 @@ public class UsuariosDAO {
             ps.setInt(9, u.getIdRol());
             ps.setInt(10, u.getIdUsuarios());
             ps.executeUpdate();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.out.println("❌ Error al actualizar usuario: " + e.getMessage());
         } finally {
             cerrarRecursos();
         }
+    }
+
+    // OJO: esta clase reutiliza con/ps/rs como campos de instancia en el resto
+    // de métodos, así que NO se puede llamar aquí a otro método del DAO (como
+    // listarPorId) sin pisar esos campos mientras actualizarUsuario todavía los
+    // está usando. Por eso esta consulta usa su propia Connection/PreparedStatement
+    // /ResultSet locales, totalmente independientes de los campos de instancia.
+    private String obtenerContrasenaActual(int idUsuarios) {
+        String sql = "SELECT contrasena FROM usuarios WHERE idUsuarios = ?";
+        try (Connection conLocal = cn.Conexion();
+             PreparedStatement psLocal = conLocal.prepareStatement(sql)) {
+            psLocal.setInt(1, idUsuarios);
+            try (ResultSet rsLocal = psLocal.executeQuery()) {
+                if (rsLocal.next()) {
+                    return rsLocal.getString("contrasena");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al obtener contraseña actual: " + e.getMessage());
+        }
+        return null;
     }
     
     // 7. Listar tipos de documento excluyendo la tarjeta de identidad (ID 2)
@@ -315,7 +377,7 @@ public class UsuariosDAO {
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
-            ps.setString(1, nuevaContrasena);
+            ps.setString(1, PasswordUtil.hash(nuevaContrasena));
             ps.setString(2, correo);
             ps.executeUpdate();
             actualizado = true;

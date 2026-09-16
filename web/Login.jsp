@@ -41,6 +41,29 @@
             }
         %>
 
+        <%-- Mensaje al cerrar sesión manualmente --%>
+        <%
+            if ("sesion_cerrada".equals(status)) {
+        %>
+            <div class="success-toast" style="background: rgba(40,167,69,0.1); border: 1px solid #28a745; color: #7ce495; padding: 12px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                Sesión cerrada correctamente.
+            </div>
+        <%
+            }
+        %>
+
+        <%-- Mensaje cuando se intenta acceder a una página privada sin sesión activa
+             (por ejemplo, al volver atrás con el navegador tras cerrar sesión) --%>
+        <%
+            if ("sesion_requerida".equals(status)) {
+        %>
+            <div class="error-toast" style="color: red; margin-bottom: 10px;">
+                Tu sesión ha finalizado. Inicia sesión nuevamente para continuar.
+            </div>
+        <%
+            }
+        %>
+
         <%-- FORMULARIO CORREGIDO: Nombres de input coinciden con el Servlet --%>
         <form action="${pageContext.request.contextPath}/ServletLogin" method="POST">
             <input type="hidden" name="accion" value="ingresar">
