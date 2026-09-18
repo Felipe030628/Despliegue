@@ -33,6 +33,7 @@ public class PedidoDAO {
                 Pedidos p = new Pedidos();
                 p.setIdPedido(rs.getInt("idPedido"));
                 p.setCliente(rs.getString("cliente"));
+                p.setCorreo(rs.getString("correo"));
                 p.setMesa(rs.getString("mesa"));
                 p.setFecha(rs.getString("fecha"));
                 p.setEstado(rs.getString("estado"));
@@ -48,15 +49,16 @@ public class PedidoDAO {
     }
 
     public void registrarPedido(Pedidos p) {
-        String sql = "INSERT INTO pedidos (cliente, mesa, fecha, estado, total) VALUES (?,?,?,?,?)";
+        String sql = "INSERT INTO pedidos (cliente, correo, mesa, fecha, estado, total) VALUES (?,?,?,?,?,?)";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
             ps.setString(1, p.getCliente());
-            ps.setString(2, p.getMesa());
-            ps.setString(3, p.getFecha());
-            ps.setString(4, p.getEstado());
-            ps.setDouble(5, p.getTotal());
+            ps.setString(2, p.getCorreo());
+            ps.setString(3, p.getMesa());
+            ps.setString(4, p.getFecha());
+            ps.setString(5, p.getEstado());
+            ps.setDouble(6, p.getTotal());
             ps.executeUpdate();
         } catch (SQLException e) { 
             System.out.println("Error registrar: " + e); 
@@ -71,7 +73,7 @@ public class PedidoDAO {
     // Devuelve el idPedido generado, o -1 si falló.
     public int registrarPedidoConDetalle(Pedidos p, List<DetallePedido> detalles) {
         int idPedidoGenerado = -1;
-        String sqlPedido = "INSERT INTO pedidos (cliente, mesa, fecha, estado, total) VALUES (?,?,?,?,?)";
+        String sqlPedido = "INSERT INTO pedidos (cliente, correo, mesa, fecha, estado, total) VALUES (?,?,?,?,?,?)";
         String sqlDetalle = "INSERT INTO detalle_pedido (idPedido, idProducto, cantidad, precio_unitario, subtotal) VALUES (?,?,?,?,?)";
         String sqlMovimiento = "INSERT INTO movimientos_stock (fecha, cantidad, motivo, idProducto) VALUES (?,?,?,?)";
 
@@ -87,10 +89,11 @@ public class PedidoDAO {
 
             psPedido = conTx.prepareStatement(sqlPedido, Statement.RETURN_GENERATED_KEYS);
             psPedido.setString(1, p.getCliente());
-            psPedido.setString(2, p.getMesa());
-            psPedido.setString(3, p.getFecha());
-            psPedido.setString(4, p.getEstado());
-            psPedido.setDouble(5, p.getTotal());
+            psPedido.setString(2, p.getCorreo());
+            psPedido.setString(3, p.getMesa());
+            psPedido.setString(4, p.getFecha());
+            psPedido.setString(5, p.getEstado());
+            psPedido.setDouble(6, p.getTotal());
             psPedido.executeUpdate();
 
             keys = psPedido.getGeneratedKeys();
@@ -223,6 +226,7 @@ public class PedidoDAO {
                 p = new Pedidos();
                 p.setIdPedido(rs.getInt("idPedido"));
                 p.setCliente(rs.getString("cliente"));
+                p.setCorreo(rs.getString("correo"));
                 p.setMesa(rs.getString("mesa"));
                 p.setFecha(rs.getString("fecha"));
                 p.setEstado(rs.getString("estado"));
@@ -237,16 +241,17 @@ public class PedidoDAO {
     }
 
     public void actualizarPedido(Pedidos p) {
-        String sql = "UPDATE pedidos SET cliente = ?, mesa = ?, fecha = ?, estado = ?, total = ? WHERE idPedido = ?";
+        String sql = "UPDATE pedidos SET cliente = ?, correo = ?, mesa = ?, fecha = ?, estado = ?, total = ? WHERE idPedido = ?";
         try {
             con = cn.Conexion();
             ps = con.prepareStatement(sql);
             ps.setString(1, p.getCliente());
-            ps.setString(2, p.getMesa());
-            ps.setString(3, p.getFecha());
-            ps.setString(4, p.getEstado());
-            ps.setDouble(5, p.getTotal());
-            ps.setInt(6, p.getIdPedido());
+            ps.setString(2, p.getCorreo());
+            ps.setString(3, p.getMesa());
+            ps.setString(4, p.getFecha());
+            ps.setString(5, p.getEstado());
+            ps.setDouble(6, p.getTotal());
+            ps.setInt(7, p.getIdPedido());
             ps.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Error actualizar pedido: " + e);

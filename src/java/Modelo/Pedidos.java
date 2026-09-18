@@ -3,6 +3,7 @@ package Modelo;
 public class Pedidos {
     private int idPedido;
     private String cliente;
+    private String correo;
     private String mesa;
     private String fecha;
     private String estado;
@@ -14,6 +15,8 @@ public class Pedidos {
     public void setIdPedido(int idPedido) { this.idPedido = idPedido; }
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
+    public String getCorreo() { return correo; }
+    public void setCorreo(String correo) { this.correo = correo; }
     public String getMesa() { return mesa; }
     public void setMesa(String mesa) { this.mesa = mesa; }
     public String getFecha() { return fecha; }

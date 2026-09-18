@@ -1,11 +1,13 @@
 package Controlador;
 
 import java.util.Properties;
+import jakarta.activation.DataHandler;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 
 public class CorreoUtil {
 
@@ -118,6 +120,115 @@ public class CorreoUtil {
             System.out.println("⚠️ Aviso de red: No se pudo conectar a Gmail por bloqueo de puertos en la nube (Normal en Railway). Se usará el código en consola.");
             return false;
         }
+    }
+
+    /**
+     * Envía la factura en PDF de un pedido al correo del cliente (el mismo correo
+     * que la app de clientes captura en la pantalla de bienvenida y envía al crear
+     * el pedido). Se adjunta el PDF ya generado por FacturaPdfUtil.
+     */
+    public static boolean enviarFacturaCorreo(String destinatario, byte[] pdf, String nombreArchivo, int idPedido) {
+        System.out.println("==================================================");
+        System.out.println(" [FACTURA] Enviando factura del pedido #" + idPedido + " a: " + destinatario);
+        System.out.println("==================================================");
+
+        if (destinatario == null || destinatario.trim().isEmpty()) {
+            System.out.println("⚠️ No se envió la factura por correo: el pedido no tiene un correo de cliente registrado.");
+            return false;
+        }
+
+        final String remitente = "barstocks.a.s@gmail.com";
+        final String password = "tnaccwnefdzehmme";
+
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        props.put("mail.smtp.connectiontimeout", "5000");
+        props.put("mail.smtp.timeout", "5000");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(remitente, password);
+            }
+        });
+
+        try {
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(remitente, "BarStock"));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario));
+            message.setSubject("Tu factura del Pedido #" + idPedido + " - BarStock");
+
+            // Parte de texto plano (fallback para clientes que no leen HTML)
+            MimeBodyPart textPart = new MimeBodyPart();
+            textPart.setText(
+                "Hola,\n\n" +
+                "Gracias por tu compra en BarStock. Adjunto encontraras la factura de tu Pedido #" + idPedido + ".\n\n" +
+                "-- BarStock"
+            );
+
+            // Parte HTML con el diseño de marca
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setContent(construirHtmlFactura(idPedido), "text/html; charset=UTF-8");
+
+            MimeMultipart alternative = new MimeMultipart("alternative");
+            alternative.addBodyPart(textPart);
+            alternative.addBodyPart(htmlPart);
+
+            MimeBodyPart cuerpoPart = new MimeBodyPart();
+            cuerpoPart.setContent(alternative);
+
+            // Adjunto: el PDF de la factura
+            MimeBodyPart adjuntoPart = new MimeBodyPart();
+            ByteArrayDataSource ds = new ByteArrayDataSource(pdf, "application/pdf");
+            adjuntoPart.setDataHandler(new DataHandler(ds));
+            adjuntoPart.setFileName(nombreArchivo);
+
+            MimeMultipart mixed = new MimeMultipart("mixed");
+            mixed.addBodyPart(cuerpoPart);
+            mixed.addBodyPart(adjuntoPart);
+
+            message.setContent(mixed);
+
+            Transport.send(message);
+            return true;
+        } catch (Exception e) {
+            System.out.println("⚠️ Aviso de red: No se pudo enviar la factura por correo (" + e.getMessage() + ").");
+            return false;
+        }
+    }
+
+    /**
+     * Plantilla HTML del correo de envío de factura. Misma identidad visual que
+     * los demás correos de BarStock.
+     */
+    private static String construirHtmlFactura(int idPedido) {
+        return "<!DOCTYPE html>"
+            + "<html lang=\"es\">"
+            + "<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>"
+            + "<body style=\"margin:0; padding:0; background-color:#0d0d0d; font-family:'Segoe UI', Arial, sans-serif;\">"
+            + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#0d0d0d; padding:40px 0;\">"
+            + "<tr><td align=\"center\">"
+            + "<table role=\"presentation\" width=\"420\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#1a1a1a; border-radius:16px; border:1px solid rgba(197,160,89,0.25); border-top:1px solid rgba(197,160,89,0.6); box-shadow:0 25px 50px rgba(0,0,0,0.6); overflow:hidden;\">"
+            + "<tr><td align=\"center\" style=\"padding:40px 30px 10px 30px;\">"
+            + "<div style=\"font-family:'Brush Script MT', cursive; color:#c5a059; font-size:42px; line-height:1;\">BarStock</div>"
+            + "<div style=\"color:#a0a0a0; font-size:11px; letter-spacing:3px; text-transform:uppercase; margin-top:6px;\">Inventory Management</div>"
+            + "</td></tr>"
+            + "<tr><td align=\"center\" style=\"padding:20px 30px 0 30px;\">"
+            + "<div style=\"width:60px; height:60px; border-radius:50%; background-color:rgba(197,160,89,0.1); border:1px solid rgba(197,160,89,0.4); text-align:center; line-height:60px; font-size:26px;\">&#128196;</div>"
+            + "</td></tr>"
+            + "<tr><td align=\"center\" style=\"padding:20px 40px 10px 40px;\">"
+            + "<p style=\"color:#ffffff; font-size:16px; margin:0 0 8px 0;\">Tu factura esta lista</p>"
+            + "<p style=\"color:#a0a0a0; font-size:13px; line-height:1.6; margin:0;\">Adjuntamos en PDF la factura de tu Pedido #" + idPedido + ". ¡Gracias por tu compra!</p>"
+            + "</td></tr>"
+            + "<tr><td align=\"center\" style=\"background-color:#141414; padding:18px; border-top:1px solid rgba(197,160,89,0.15);\">"
+            + "<p style=\"color:#5a5a5a; font-size:10px; letter-spacing:1px; margin:0;\">&copy; BarStock &mdash; Todos los derechos reservados</p>"
+            + "</td></tr>"
+            + "</table>"
+            + "</td></tr>"
+            + "</table>"
+            + "</body></html>";
     }
 
     /**

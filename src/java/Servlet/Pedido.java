@@ -1,5 +1,6 @@
 package Servlet;
 
+import Controlador.CorreoUtil;
 import Controlador.DetallePedidoDAO;
 import Controlador.MesaDAO;
 import Controlador.PedidoDAO;
@@ -135,6 +136,7 @@ public class Pedido extends HttpServlet {
 
                     String mesa = (String) datos.get("mesa");
                     String cliente = (String) datos.get("cliente");
+                    String correo = (String) datos.get("correo");
                     Object itemsObj = datos.get("items");
 
                     if (mesa == null || mesa.trim().isEmpty()) {
@@ -143,6 +145,10 @@ public class Pedido extends HttpServlet {
                     }
                     if (cliente == null || cliente.trim().isEmpty()) {
                         response.getWriter().print("{\"success\":false,\"error\":\"Falta el nombre del cliente.\"}");
+                        return;
+                    }
+                    if (correo == null || correo.trim().isEmpty()) {
+                        response.getWriter().print("{\"success\":false,\"error\":\"Falta el correo del cliente.\"}");
                         return;
                     }
                     if (!(itemsObj instanceof List) || ((List<?>) itemsObj).isEmpty()) {
@@ -196,6 +202,7 @@ public class Pedido extends HttpServlet {
 
                     Pedidos p = new Pedidos();
                     p.setCliente(cliente);
+                    p.setCorreo(correo);
                     p.setMesa(mesa);
                     p.setFecha(fecha);
                     p.setEstado("Pendiente");
@@ -316,6 +323,12 @@ public class Pedido extends HttpServlet {
                     List<DetallePedido> detalles = daoDetalle.listarPorPedido(id);
 
                     byte[] pdf = FacturaPdfUtil.generarFactura(pedido, detalles);
+
+                    // Envía la factura por correo al email del cliente (el que la app de
+                    // clientes capturó en la pantalla de bienvenida y guardó con el pedido).
+                    if (pedido != null && pedido.getCorreo() != null && !pedido.getCorreo().trim().isEmpty()) {
+                        CorreoUtil.enviarFacturaCorreo(pedido.getCorreo(), pdf, "Factura_Pedido_" + id + ".pdf", id);
+                    }
 
                     response.setContentType("application/pdf");
                     response.setContentLength(pdf.length);
