@@ -70,6 +70,19 @@ public class AuthFilter implements Filter {
         "registrarjson"
     };
 
+    // El cliente de mesa (app Flutter) navega el catálogo, crea su pedido y
+    // consulta el estado SIN iniciar sesión de empleado (solo da su nombre y
+    // correo). Estas acciones deben quedar accesibles sin sesión; el resto
+    // de /Producto y /Pedido (listarJson completo, eliminarJson, etc.) sigue
+    // protegido.
+    private static final String[] ACCIONES_PUBLICAS_PRODUCTO = {
+        "listarjson"
+    };
+    private static final String[] ACCIONES_PUBLICAS_PEDIDO = {
+        "crearjson",
+        "detallejson"
+    };
+
     // Páginas y acciones de administración de empleados: solo rol Administrador (idRol == 1)
     private static final String[] RUTAS_SOLO_ADMIN_VISTA = {
         "/Vista/Empleados.jsp",
@@ -142,8 +155,23 @@ public class AuthFilter implements Filter {
             return false;
         }
 
-        // El resto de servlets mapeados (/Producto, /Mesas, /Movimiento,
-        // /Pedido, /DashboardData, /BuscarGlobal) son siempre privados.
+        if (path.equals("/Producto")) {
+            return accion != null && contiene(ACCIONES_PUBLICAS_PRODUCTO, accion.toLowerCase());
+        }
+
+        if (path.equals("/Pedido")) {
+            return accion != null && contiene(ACCIONES_PUBLICAS_PEDIDO, accion.toLowerCase());
+        }
+
+        // El resto de servlets mapeados (/Mesas, /Movimiento, /DashboardData,
+        // /BuscarGlobal) son siempre privados.
+        return false;
+    }
+
+    private boolean contiene(String[] arreglo, String valor) {
+        for (String v : arreglo) {
+            if (v.equals(valor)) return true;
+        }
         return false;
     }
 

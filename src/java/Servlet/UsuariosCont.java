@@ -83,6 +83,7 @@ public class UsuariosCont extends HttpServlet {
                         } else if (userLogin.getActivo() != 1) {
                             response.getWriter().print(jsonError("Tu cuenta aún no está verificada. Revisa tu correo."));
                         } else {
+                            request.getSession(true).setAttribute("usuarioLogueado", userLogin);
                             response.getWriter().print("{\"success\":true,\"usuario\":" + jsonUsuario(userLogin) + "}");
                         }
                     } catch (Exception e) {

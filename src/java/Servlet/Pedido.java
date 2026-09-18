@@ -8,13 +8,18 @@ import Modelo.DetallePedido;
 import Modelo.Pedidos;
 import Modelo.Productos;
 import Util.FacturaPdfUtil;
+import Util.JsonParser;
 import Util.JsonUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -114,6 +119,99 @@ public class Pedido extends HttpServlet {
                     response.getWriter().print("{\"success\":true}");
                 } catch (Exception e) {
                     response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
+                }
+                break;
+            }
+
+            // ---------- NUEVO: crear pedido desde la app de cliente (sin sesión) ----------
+            // Body JSON esperado (lo manda PedidoClienteService en Flutter):
+            // { "mesa": "5", "cliente": "Juan Pérez", "correo": "juan@correo.com",
+            //   "items": [ { "idProducto": 3, "cantidad": 2 }, ... ] }
+            case "crearJson": {
+                response.setContentType("application/json;charset=UTF-8");
+                try {
+                    String body = JsonParser.leerBody(request);
+                    Map<String, Object> datos = JsonParser.parseObject(body);
+
+                    String mesa = (String) datos.get("mesa");
+                    String cliente = (String) datos.get("cliente");
+                    Object itemsObj = datos.get("items");
+
+                    if (mesa == null || mesa.trim().isEmpty()) {
+                        response.getWriter().print("{\"success\":false,\"error\":\"Falta el número de mesa.\"}");
+                        return;
+                    }
+                    if (cliente == null || cliente.trim().isEmpty()) {
+                        response.getWriter().print("{\"success\":false,\"error\":\"Falta el nombre del cliente.\"}");
+                        return;
+                    }
+                    if (!(itemsObj instanceof List) || ((List<?>) itemsObj).isEmpty()) {
+                        response.getWriter().print("{\"success\":false,\"error\":\"El carrito está vacío.\"}");
+                        return;
+                    }
+
+                    List<?> itemsJson = (List<?>) itemsObj;
+                    List<DetallePedido> detalles = new ArrayList<>();
+                    double total = 0;
+                    String errorStock = null;
+
+                    for (Object o : itemsJson) {
+                        if (!(o instanceof Map)) continue;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> itemMap = (Map<String, Object>) o;
+
+                        int idProd = ((Number) itemMap.get("idProducto")).intValue();
+                        int cantidad = ((Number) itemMap.get("cantidad")).intValue();
+                        if (cantidad <= 0) continue;
+
+                        Productos producto = daoProducto.listarPorId(idProd);
+                        int stockDisponible = daoProducto.obtenerStock(idProd);
+
+                        if (producto == null || producto.getNombre() == null) {
+                            errorStock = "Uno de los productos ya no existe.";
+                            break;
+                        }
+                        if (cantidad > stockDisponible) {
+                            errorStock = "Stock insuficiente para \"" + producto.getNombre()
+                                    + "\" (disponible: " + stockDisponible + ")";
+                            break;
+                        }
+
+                        DetallePedido d = new DetallePedido(idProd, cantidad, producto.getPrecio());
+                        detalles.add(d);
+                        total += d.getSubtotal();
+                    }
+
+                    if (errorStock != null) {
+                        response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(errorStock) + "}");
+                        return;
+                    }
+                    if (detalles.isEmpty()) {
+                        response.getWriter().print("{\"success\":false,\"error\":\"El carrito está vacío.\"}");
+                        return;
+                    }
+
+                    String fecha = LocalDateTime.now(ZoneId.of("America/Bogota"))
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+
+                    Pedidos p = new Pedidos();
+                    p.setCliente(cliente);
+                    p.setMesa(mesa);
+                    p.setFecha(fecha);
+                    p.setEstado("Pendiente");
+                    p.setTotal(total);
+
+                    int idGenerado = dao.registrarPedidoConDetalle(p, detalles);
+
+                    if (idGenerado > 0) {
+                        daoMesa.actualizarEstadoPorNumero(mesa, "Ocupado");
+                        response.getWriter().print("{\"success\":true,\"idPedido\":" + idGenerado + "}");
+                    } else {
+                        response.getWriter().print("{\"success\":false,\"error\":\"No se pudo registrar el pedido.\"}");
+                    }
+                } catch (Exception e) {
+                    System.out.println("❌ Error en Pedido crearJson: " + e.getMessage());
+                    response.getWriter().print("{\"success\":false,\"error\":\"Error en el servidor al crear el pedido.\"}");
                 }
                 break;
             }
