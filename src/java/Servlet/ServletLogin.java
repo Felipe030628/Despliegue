@@ -1,59 +1,76 @@
 package Servlet;
 
-import Controlador.UsuariosDAO;
 import java.io.IOException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+import Controlador.UsuariosDAO;
 import Modelo.Usuarios;
 
+/**
+ * Controlador HTTP para el proceso de autenticación de usuarios.
+ * Gestiona la validación de credenciales, control de estado de cuenta,
+ * prevención de fijación de sesión y establecimiento de la sesión de usuario.
+ */
 @WebServlet(name = "ServletLogin", urlPatterns = {"/ServletLogin"})
 public class ServletLogin extends HttpServlet {
 
+    private static final int TIEMPO_INACTIVIDAD_SEGUNDOS = 30 * 60;
+    private static final String VISTA_LOGIN = "/Login.jsp";
+    private static final String VISTA_PANEL = "/Vista/Panel.jsp";
+
+    private final UsuariosDAO usuariosDAO = new UsuariosDAO();
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        
-        // Obtenemos los datos del formulario de login
+
         String correo = request.getParameter("txtCorreo");
         String contrasena = request.getParameter("txtContrasena");
-        
-        // Instanciamos el DAO
-        UsuariosDAO dao = new UsuariosDAO();
-        
-        // Validamos el login mediante correo y contraseña
-        Usuarios user = dao.validarLogin(correo, contrasena);
 
-        if (user != null) {
-            // Verificamos si el usuario está activo (asumiendo que getEstado() o getActivo() retorna 1 o true)
-            // Ajusta "user.getActivo() == 1" según como tengas definido tu campo en el Modelo
-            if (user.getActivo() == 1) { 
-                // Protección contra "session fixation": si ya existía una sesión
-                // (por ejemplo anónima, de antes de iniciar sesión) se invalida y
-                // se crea una completamente nueva para el usuario autenticado, en
-                // vez de reutilizar el mismo ID de sesión.
-                HttpSession sesionAnterior = request.getSession(false);
-                if (sesionAnterior != null) {
-                    sesionAnterior.invalidate();
-                }
-                HttpSession session = request.getSession(true);
-                session.setAttribute("usuarioLogueado", user);
-                // Cierre de sesión automático tras 30 min de inactividad
-                session.setMaxInactiveInterval(30 * 60);
-                response.sendRedirect(request.getContextPath() + "/Vista/Panel.jsp");
-            } else {
-                // Si está inactivo, bloqueamos el acceso y mandamos mensaje
-                request.setAttribute("mensaje", "Su cuenta se encuentra inactiva. Contacte al administrador.");
-                request.getRequestDispatcher("/Login.jsp").forward(request, response);
-            }
-        } else {
-            // Credenciales incorrectas
-            request.setAttribute("mensaje", "Credenciales incorrectas.");
-            request.getRequestDispatcher("/Login.jsp").forward(request, response);
+        if (correo == null || contrasena == null || correo.trim().isEmpty() || contrasena.trim().isEmpty()) {
+            redireccionarConMensaje(request, response, "Debe ingresar el correo y la contraseña.");
+            return;
         }
+
+        Usuarios user = usuariosDAO.validarLogin(correo.trim(), contrasena);
+
+        if (user == null) {
+            redireccionarConMensaje(request, response, "Credenciales incorrectas.");
+            return;
+        }
+
+        if (user.getActivo() != 1) {
+            redireccionarConMensaje(request, response, "Su cuenta se encuentra inactiva. Contacte al administrador.");
+            return;
+        }
+
+        iniciarSesionUsuario(request, response, user);
+    }
+
+    private void iniciarSesionUsuario(HttpServletRequest request, HttpServletResponse response, Usuarios user)
+            throws IOException {
+
+        HttpSession sesionAnterior = request.getSession(false);
+        if (sesionAnterior != null) {
+            sesionAnterior.invalidate();
+        }
+
+        HttpSession nuevaSesion = request.getSession(true);
+        nuevaSesion.setAttribute("usuarioLogueado", user);
+        nuevaSesion.setMaxInactiveInterval(TIEMPO_INACTIVIDAD_SEGUNDOS);
+
+        response.sendRedirect(request.getContextPath() + VISTA_PANEL);
+    }
+
+    private void redireccionarConMensaje(HttpServletRequest request, HttpServletResponse response, String mensaje)
+            throws ServletException, IOException {
+        request.setAttribute("mensaje", mensaje);
+        request.getRequestDispatcher(VISTA_LOGIN).forward(request, response);
     }
 
     @Override

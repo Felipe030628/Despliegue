@@ -1,44 +1,55 @@
 package Controlador;
 
-import Modelo.Pagos;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import Modelo.Pagos;
 
 public class PagosDAO {
 
-    private String url = "jdbc:mysql://localhost:3307/barstock";
-    private String user = "root";
-    private String pass = "";
+    private final Conexion conexion = new Conexion();
 
-    // INSERTAR
+    /**
+     * Inserta un nuevo registro de pago mediante procedimiento almacenado.
+     * 
+     * @param p Objeto Pagos con la información del pago.
+     */
     public void insertar(Pagos p) {
-        String sql = "INSERT INTO pagos (monto, pedido_Cabecera_idPedido, estados_Pag_idEstados_Pag, metodos_Pago_idMetodos_Pago) VALUES (?, ?, ?, ?)";
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_insertar_pago(?, ?, ?, ?)}";
 
-            ps.setDouble(1, p.monto);
-            ps.setInt(2, p.pedido_Cabecera_idPedido);
-            ps.setInt(3, p.estados_Pag_idEstados_Pag);
-            ps.setInt(4, p.metodos_Pago_idMetodos_Pago);
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
 
-            ps.executeUpdate();
-            System.out.println("Pago registrado correctamente");
-        } catch (Exception e) {
-            e.printStackTrace();
+            cs.setDouble(1, p.monto);
+            cs.setInt(2, p.pedido_Cabecera_idPedido);
+            cs.setInt(3, p.estados_Pag_idEstados_Pag);
+            cs.setInt(4, p.metodos_Pago_idMetodos_Pago);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al insertar el pago: " + e.getMessage());
         }
     }
 
-    // CONSULTAR
+    /**
+     * Obtiene un pago específico por su ID.
+     * 
+     * @param id Identificador único del pago.
+     * @return Objeto Pagos poblado o vacío si no se encuentra.
+     */
     public Pagos consultar(int id) {
         Pagos p = new Pagos();
-        String sql = "SELECT * FROM pagos WHERE idPagos = ?";
-        
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_consultar_pago(?)}";
 
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+
+            try (ResultSet rs = cs.executeQuery()) {
                 if (rs.next()) {
                     p.idPagos = rs.getInt("idPagos");
                     p.monto = rs.getDouble("monto");
@@ -47,20 +58,26 @@ public class PagosDAO {
                     p.metodos_Pago_idMetodos_Pago = rs.getInt("metodos_Pago_idMetodos_Pago");
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        } catch (SQLException e) {
+            System.err.println("Error al consultar el pago por ID (" + id + "): " + e.getMessage());
         }
+
         return p;
     }
 
-    // LISTAR
+    /**
+     * Obtiene la lista completa de pagos registrados.
+     * 
+     * @return List con los objetos Pagos.
+     */
     public List<Pagos> listar() {
         List<Pagos> lista = new ArrayList<>();
-        String sql = "SELECT * FROM pagos";
+        String sql = "{call sp_listar_pagos()}";
 
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
 
             while (rs.next()) {
                 Pagos p = new Pagos();
@@ -71,42 +88,53 @@ public class PagosDAO {
                 p.metodos_Pago_idMetodos_Pago = rs.getInt("metodos_Pago_idMetodos_Pago");
                 lista.add(p);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener el listado de pagos: " + e.getMessage());
         }
+
         return lista;
     }
 
-    // ACTUALIZAR
+    /**
+     * Actualiza la información de un pago existente.
+     * 
+     * @param p Objeto Pagos con los datos actualizados.
+     */
     public void actualizar(Pagos p) {
-        String sql = "UPDATE pagos SET monto=?, pedido_Cabecera_idPedido=?, estados_Pag_idEstados_Pag=?, metodos_Pago_idMetodos_Pago=? WHERE idPagos=?";
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_actualizar_pago(?, ?, ?, ?, ?)}";
 
-            ps.setDouble(1, p.monto);
-            ps.setInt(2, p.pedido_Cabecera_idPedido);
-            ps.setInt(3, p.estados_Pag_idEstados_Pag);
-            ps.setInt(4, p.metodos_Pago_idMetodos_Pago);
-            ps.setInt(5, p.idPagos);
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
 
-            ps.executeUpdate();
-            System.out.println("Pago actualizado correctamente");
-        } catch (Exception e) {
-            e.printStackTrace();
+            cs.setInt(1, p.idPagos);
+            cs.setDouble(2, p.monto);
+            cs.setInt(3, p.pedido_Cabecera_idPedido);
+            cs.setInt(4, p.estados_Pag_idEstados_Pag);
+            cs.setInt(5, p.metodos_Pago_idMetodos_Pago);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar el pago (" + p.idPagos + "): " + e.getMessage());
         }
     }
 
-    // ELIMINAR
+    /**
+     * Elimina un registro de pago por su ID.
+     * 
+     * @param id Identificador del pago a eliminar.
+     */
     public void eliminar(int id) {
-        String sql = "DELETE FROM pagos WHERE idPagos = ?";
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_eliminar_pago(?)}";
 
-            ps.setInt(1, id);
-            ps.executeUpdate();
-            System.out.println("Pago eliminado correctamente");
-        } catch (Exception e) {
-            e.printStackTrace();
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar el pago (" + id + "): " + e.getMessage());
         }
     }
 }

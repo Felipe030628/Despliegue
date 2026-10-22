@@ -1,57 +1,50 @@
 package Controlador;
 
-import Modelo.DetallePedido;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import Modelo.DetallePedido;
 
 public class DetallePedidoDAO {
 
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
+    private final Conexion conexion = new Conexion();
 
-    // Lista los productos de un pedido, ya con el nombre del producto incluido
+    /**
+     * Obtiene el listado de ítems pertenecientes a un pedido mediante procedimiento almacenado.
+     * 
+     * @param idPedido Identificador único del pedido.
+     * @return List con los objetos DetallePedido correspondientes.
+     */
     public List<DetallePedido> listarPorPedido(int idPedido) {
         List<DetallePedido> lista = new ArrayList<>();
-        String sql = "SELECT d.idDetalle, d.idPedido, d.idProducto, p.nombre AS nombreProducto, "
-                + "d.cantidad, d.precio_unitario, d.subtotal "
-                + "FROM detalle_pedido d "
-                + "JOIN productos p ON p.idProductos = d.idProducto "
-                + "WHERE d.idPedido = ? "
-                + "ORDER BY d.idDetalle";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, idPedido);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                DetallePedido d = new DetallePedido();
-                d.setIdDetalle(rs.getInt("idDetalle"));
-                d.setIdPedido(rs.getInt("idPedido"));
-                d.setIdProducto(rs.getInt("idProducto"));
-                d.setNombreProducto(rs.getString("nombreProducto"));
-                d.setCantidad(rs.getInt("cantidad"));
-                d.setPrecioUnitario(rs.getDouble("precio_unitario"));
-                d.setSubtotal(rs.getDouble("subtotal"));
-                lista.add(d);
-            }
-        } catch (SQLException e) {
-            System.out.println("Error al listar detalle de pedido: " + e);
-        } finally {
-            cerrarRecursos();
-        }
-        return lista;
-    }
+        String sql = "{call sp_listar_detalle_pedido(?)}";
 
-    private void cerrarRecursos() {
-        try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception e) {
-            System.out.println("Error al cerrar recursos: " + e.getMessage());
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, idPedido);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    DetallePedido detalle = new DetallePedido();
+                    detalle.setIdDetalle(rs.getInt("idDetalle"));
+                    detalle.setIdPedido(rs.getInt("idPedido"));
+                    detalle.setIdProducto(rs.getInt("idProducto"));
+                    detalle.setNombreProducto(rs.getString("nombreProducto"));
+                    detalle.setCantidad(rs.getInt("cantidad"));
+                    detalle.setPrecioUnitario(rs.getDouble("precio_unitario"));
+                    detalle.setSubtotal(rs.getDouble("subtotal"));
+                    lista.add(detalle);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al consultar el detalle del pedido " + idPedido + ": " + e.getMessage());
         }
+
+        return lista;
     }
 }

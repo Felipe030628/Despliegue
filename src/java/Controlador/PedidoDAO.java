@@ -1,34 +1,34 @@
 package Controlador;
 
-import Modelo.DetallePedido;
-import Modelo.Pedidos;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import Modelo.DetallePedido;
+import Modelo.Pedidos;
 
 public class PedidoDAO {
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
 
-    // Zona horaria del negocio. Se usa para calcular "hoy" y "los últimos 7 días"
-    // en vez de confiar en CURDATE()/NOW() del servidor de base de datos, que puede
-    // estar corriendo en otra zona horaria (por ejemplo UTC) y desfasar las cifras
-    // varias horas cerca de la medianoche en Colombia.
     private static final ZoneId ZONA_NEGOCIO = ZoneId.of("America/Bogota");
+    private final Conexion conexion = new Conexion();
 
+    /**
+     * Obtiene el listado completo de pedidos.
+     */
     public List<Pedidos> listarPedidos() {
         List<Pedidos> lista = new ArrayList<>();
-        String sql = "SELECT * FROM pedidos";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
+        String sql = "{call sp_listar_pedidos()}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
             while (rs.next()) {
                 Pedidos p = new Pedidos();
                 p.setIdPedido(rs.getInt("idPedido"));
@@ -39,284 +39,283 @@ public class PedidoDAO {
                 p.setTotal(rs.getDouble("total"));
                 lista.add(p);
             }
-        } catch (SQLException e) { 
-            System.out.println("Error listar: " + e); 
-        } finally { 
-            cerrarRecursos(); 
+
+        } catch (SQLException e) {
+            System.err.println("Error al listar los pedidos: " + e.getMessage());
         }
+
         return lista;
     }
 
+    /**
+     * Registra un pedido individual.
+     */
     public void registrarPedido(Pedidos p) {
-        String sql = "INSERT INTO pedidos (cliente, mesa, fecha, estado, total) VALUES (?,?,?,?,?)";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, p.getCliente());
-            ps.setString(2, p.getMesa());
-            ps.setString(3, p.getFecha());
-            ps.setString(4, p.getEstado());
-            ps.setDouble(5, p.getTotal());
-            ps.executeUpdate();
-        } catch (SQLException e) { 
-            System.out.println("Error registrar: " + e); 
-        } finally { 
-            cerrarRecursos(); 
+        String sql = "{call sp_registrar_pedido(?, ?, ?, ?, ?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setString(1, p.getCliente());
+            cs.setString(2, p.getMesa());
+            cs.setString(3, p.getFecha());
+            cs.setString(4, p.getEstado());
+            cs.setDouble(5, p.getTotal());
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al registrar el pedido: " + e.getMessage());
         }
     }
 
-    // Registra el pedido, guarda cada producto pedido en detalle_pedido y genera
-    // automáticamente el movimiento de stock (salida) correspondiente a cada línea.
-    // Todo ocurre en una sola transacción: si algo falla no se descuenta nada.
-    // Devuelve el idPedido generado, o -1 si falló.
+    /**
+     * Registra el pedido, sus detalles y los movimientos de stock asociados dentro de una sola transacción.
+     */
     public int registrarPedidoConDetalle(Pedidos p, List<DetallePedido> detalles) {
         int idPedidoGenerado = -1;
-        String sqlPedido = "INSERT INTO pedidos (cliente, mesa, fecha, estado, total) VALUES (?,?,?,?,?)";
-        String sqlDetalle = "INSERT INTO detalle_pedido (idPedido, idProducto, cantidad, precio_unitario, subtotal) VALUES (?,?,?,?,?)";
-        String sqlMovimiento = "INSERT INTO movimientos_stock (fecha, cantidad, motivo, idProducto) VALUES (?,?,?,?)";
+        String sqlPedido = "{call sp_registrar_pedido_transaccion(?, ?, ?, ?, ?)}";
+        String sqlDetalle = "{call sp_registrar_detalle_pedido(?, ?, ?, ?, ?)}";
+        String sqlMovimiento = "{call sp_registrar_movimiento(?, ?, ?, ?)}";
 
         Connection conTx = null;
-        PreparedStatement psPedido = null;
-        PreparedStatement psDetalle = null;
-        PreparedStatement psMov = null;
-        ResultSet keys = null;
 
         try {
-            conTx = cn.Conexion();
+            conTx = conexion.Conexion();
             conTx.setAutoCommit(false);
 
-            psPedido = conTx.prepareStatement(sqlPedido, Statement.RETURN_GENERATED_KEYS);
-            psPedido.setString(1, p.getCliente());
-            psPedido.setString(2, p.getMesa());
-            psPedido.setString(3, p.getFecha());
-            psPedido.setString(4, p.getEstado());
-            psPedido.setDouble(5, p.getTotal());
-            psPedido.executeUpdate();
+            try (CallableStatement csPedido = conTx.prepareCall(sqlPedido)) {
+                csPedido.setString(1, p.getCliente());
+                csPedido.setString(2, p.getMesa());
+                csPedido.setString(3, p.getFecha());
+                csPedido.setString(4, p.getEstado());
+                csPedido.setDouble(5, p.getTotal());
 
-            keys = psPedido.getGeneratedKeys();
-            if (keys.next()) {
-                idPedidoGenerado = keys.getInt(1);
+                try (ResultSet rsKey = csPedido.executeQuery()) {
+                    if (rsKey.next()) {
+                        idPedidoGenerado = rsKey.getInt("idPedido");
+                    }
+                }
             }
 
             if (idPedidoGenerado > 0 && detalles != null && !detalles.isEmpty()) {
-                psDetalle = conTx.prepareStatement(sqlDetalle);
-                psMov = conTx.prepareStatement(sqlMovimiento);
+                try (CallableStatement csDetalle = conTx.prepareCall(sqlDetalle);
+                     CallableStatement csMov = conTx.prepareCall(sqlMovimiento)) {
 
-                for (DetallePedido d : detalles) {
-                    psDetalle.setInt(1, idPedidoGenerado);
-                    psDetalle.setInt(2, d.getIdProducto());
-                    psDetalle.setInt(3, d.getCantidad());
-                    psDetalle.setDouble(4, d.getPrecioUnitario());
-                    psDetalle.setDouble(5, d.getSubtotal());
-                    psDetalle.addBatch();
+                    for (DetallePedido d : detalles) {
+                        csDetalle.setInt(1, idPedidoGenerado);
+                        csDetalle.setInt(2, d.getIdProducto());
+                        csDetalle.setInt(3, d.getCantidad());
+                        csDetalle.setDouble(4, d.getPrecioUnitario());
+                        csDetalle.setDouble(5, d.getSubtotal());
+                        csDetalle.addBatch();
 
-                    psMov.setString(1, p.getFecha());
-                    psMov.setInt(2, d.getCantidad());
-                    psMov.setString(3, "Salida - Pedido #" + idPedidoGenerado);
-                    psMov.setInt(4, d.getIdProducto());
-                    psMov.addBatch();
+                        csMov.setString(1, p.getFecha());
+                        csMov.setInt(2, d.getCantidad());
+                        csMov.setString(3, "Salida - Pedido #" + idPedidoGenerado);
+                        csMov.setInt(4, d.getIdProducto());
+                        csMov.addBatch();
+                    }
+
+                    csDetalle.executeBatch();
+                    csMov.executeBatch();
                 }
-                psDetalle.executeBatch();
-                psMov.executeBatch();
             }
 
             conTx.commit();
+
         } catch (SQLException e) {
-            System.out.println("Error registrar pedido con detalle: " + e);
+            System.err.println("Error al registrar el pedido con detalle: " + e.getMessage());
             idPedidoGenerado = -1;
-            try {
-                if (conTx != null) conTx.rollback();
-            } catch (SQLException ex) {
-                System.out.println("Error en rollback: " + ex.getMessage());
+            if (conTx != null) {
+                try {
+                    conTx.rollback();
+                } catch (SQLException ex) {
+                    System.err.println("Error en rollback: " + ex.getMessage());
+                }
             }
         } finally {
-            try {
-                if (keys != null) keys.close();
-                if (psDetalle != null) psDetalle.close();
-                if (psMov != null) psMov.close();
-                if (psPedido != null) psPedido.close();
-                if (conTx != null) {
+            if (conTx != null) {
+                try {
                     conTx.setAutoCommit(true);
                     conTx.close();
+                } catch (SQLException e) {
+                    System.err.println("Error al cerrar conexión de la transacción: " + e.getMessage());
                 }
-            } catch (SQLException e) {
-                System.out.println("Error al cerrar recursos de transacción: " + e.getMessage());
             }
         }
+
         return idPedidoGenerado;
     }
 
-    // Fila de fecha (columna "fecha") guardada como texto en distintos formatos posibles
-    // ("yyyy-MM-ddTHH:mm" desde el input datetime-local, o "yyyy-MM-dd HH:mm:ss" si viene
-    // de otra fuente/importación). Se prueban todos con COALESCE para no perder pedidos
-    // válidos solo porque el separador entre fecha y hora no coincide.
-    private static final String FECHA_PARSEADA =
-            "COALESCE("
-          + "STR_TO_DATE(fecha, '%Y-%m-%dT%H:%i'), "
-          + "STR_TO_DATE(fecha, '%Y-%m-%d %H:%i:%s'), "
-          + "STR_TO_DATE(fecha, '%Y-%m-%d %H:%i'), "
-          + "STR_TO_DATE(fecha, '%Y-%m-%d')"
-          + ")";
-
-    // Caja del día: suma SOLO los pedidos cuya fecha cae en el día de hoy
-    // (calculado en la zona horaria del negocio, no en la del servidor de BD).
+    /**
+     * Obtiene el total recaudado en caja durante el día actual.
+     */
     public double obtenerTotalCajaHoy() {
         double total = 0;
-        String hoy = LocalDate.now(ZONA_NEGOCIO).toString(); // yyyy-MM-dd
-        String sql = "SELECT SUM(total) FROM pedidos "
-                + "WHERE DATE(" + FECHA_PARSEADA + ") = ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, hoy);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                total = rs.getDouble(1);
+        String hoy = LocalDate.now(ZONA_NEGOCIO).toString();
+        String sql = "{call sp_obtener_total_caja_hoy(?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setString(1, hoy);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    total = rs.getDouble("total");
+                }
             }
-        } catch (Exception e) {
-            System.out.println("Error en obtenerTotalCajaHoy: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener total caja de hoy: " + e.getMessage());
         }
+
         return total;
     }
 
-    // Suma real de ventas (total de pedidos) agrupada por día, para los últimos 7 días
-    // (ventana calculada en la zona horaria del negocio). La clave del mapa es la
-    // fecha en formato "yyyy-MM-dd".
+    /**
+     * Obtiene las ventas acumuladas de los últimos 7 días.
+     */
     public Map<String, Double> obtenerVentasUltimos7Dias() {
         Map<String, Double> ventasPorDia = new LinkedHashMap<>();
-        String desde = LocalDate.now(ZONA_NEGOCIO).minusDays(6).toString(); // yyyy-MM-dd
-        String sql = "SELECT DATE(" + FECHA_PARSEADA + ") AS dia, SUM(total) AS totalDia "
-                + "FROM pedidos "
-                + "WHERE " + FECHA_PARSEADA + " >= ? "
-                + "GROUP BY dia "
-                + "ORDER BY dia ASC";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, desde);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                String dia = rs.getString("dia");
-                if (dia != null) {
-                    ventasPorDia.put(dia, rs.getDouble("totalDia"));
+        String desde = LocalDate.now(ZONA_NEGOCIO).minusDays(6).toString();
+        String sql = "{call sp_obtener_ventas_ultimos_7_dias(?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setString(1, desde);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    String dia = rs.getString("dia");
+                    if (dia != null) {
+                        ventasPorDia.put(dia, rs.getDouble("totalDia"));
+                    }
                 }
             }
+
         } catch (SQLException e) {
-            System.out.println("Error en obtenerVentasUltimos7Dias: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al obtener ventas de los últimos 7 días: " + e.getMessage());
         }
+
         return ventasPorDia;
     }
 
+    /**
+     * Consulta un pedido por su ID.
+     */
     public Pedidos listarPorId(int id) {
         Pedidos p = null;
-        String sql = "SELECT * FROM pedidos WHERE idPedido = ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                p = new Pedidos();
-                p.setIdPedido(rs.getInt("idPedido"));
-                p.setCliente(rs.getString("cliente"));
-                p.setMesa(rs.getString("mesa"));
-                p.setFecha(rs.getString("fecha"));
-                p.setEstado(rs.getString("estado"));
-                p.setTotal(rs.getDouble("total"));
+        String sql = "{call sp_buscar_pedido_por_id(?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    p = new Pedidos();
+                    p.setIdPedido(rs.getInt("idPedido"));
+                    p.setCliente(rs.getString("cliente"));
+                    p.setMesa(rs.getString("mesa"));
+                    p.setFecha(rs.getString("fecha"));
+                    p.setEstado(rs.getString("estado"));
+                    p.setTotal(rs.getDouble("total"));
+                }
             }
+
         } catch (SQLException e) {
-            System.out.println("Error listarPorId: " + e);
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al consultar el pedido por ID (" + id + "): " + e.getMessage());
         }
+
         return p;
     }
 
+    /**
+     * Actualiza la información de un pedido existente.
+     */
     public void actualizarPedido(Pedidos p) {
-        String sql = "UPDATE pedidos SET cliente = ?, mesa = ?, fecha = ?, estado = ?, total = ? WHERE idPedido = ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, p.getCliente());
-            ps.setString(2, p.getMesa());
-            ps.setString(3, p.getFecha());
-            ps.setString(4, p.getEstado());
-            ps.setDouble(5, p.getTotal());
-            ps.setInt(6, p.getIdPedido());
-            ps.executeUpdate();
+        String sql = "{call sp_actualizar_pedido(?, ?, ?, ?, ?, ?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, p.getIdPedido());
+            cs.setString(2, p.getCliente());
+            cs.setString(3, p.getMesa());
+            cs.setString(4, p.getFecha());
+            cs.setString(5, p.getEstado());
+            cs.setDouble(6, p.getTotal());
+            cs.executeUpdate();
+
         } catch (SQLException e) {
-            System.out.println("Error actualizar pedido: " + e);
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al actualizar el pedido (" + p.getIdPedido() + "): " + e.getMessage());
         }
     }
 
-    private void cerrarRecursos() {
-        try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception e) { 
-            System.out.println("Error al cerrar: " + e.getMessage()); 
-        }
-    }
-    
+    /**
+     * Elimina un pedido y revierte el stock mediante movimientos de entrada.
+     */
     public void eliminarPedido(int idPedido) {
-        // Antes de borrar el pedido, se repone el stock de cada producto que tenía
-        // (se genera un movimiento de "Entrada" por anulación) y se borra su detalle.
+        String sqlConsultarDetalle = "{call sp_listar_detalle_pedido(?)}";
+        String sqlMovimiento = "{call sp_registrar_movimiento(?, ?, ?, ?)}";
+        String sqlEliminarDetalle = "{call sp_eliminar_detalle_por_pedido(?)}";
+        String sqlEliminarPedido = "{call sp_eliminar_pedido(?)}";
+
         Connection conTx = null;
+
         try {
-            conTx = cn.Conexion();
+            conTx = conexion.Conexion();
             conTx.setAutoCommit(false);
 
-            String sqlDetalle = "SELECT idProducto, cantidad FROM detalle_pedido WHERE idPedido = ?";
-            PreparedStatement psSel = conTx.prepareStatement(sqlDetalle);
-            psSel.setInt(1, idPedido);
-            ResultSet rsDet = psSel.executeQuery();
+            try (CallableStatement csSel = conTx.prepareCall(sqlConsultarDetalle);
+                 CallableStatement csMov = conTx.prepareCall(sqlMovimiento)) {
 
-            String sqlMov = "INSERT INTO movimientos_stock (fecha, cantidad, motivo, idProducto) VALUES (NOW(), ?, ?, ?)";
-            PreparedStatement psMov = conTx.prepareStatement(sqlMov);
-            while (rsDet.next()) {
-                psMov.setInt(1, rsDet.getInt("cantidad"));
-                psMov.setString(2, "Entrada - Anulación pedido #" + idPedido);
-                psMov.setInt(3, rsDet.getInt("idProducto"));
-                psMov.addBatch();
+                csSel.setInt(1, idPedido);
+
+                try (ResultSet rsDet = csSel.executeQuery()) {
+                    while (rsDet.next()) {
+                        csMov.setString(1, LocalDate.now(ZONA_NEGOCIO).toString());
+                        csMov.setInt(2, rsDet.getInt("cantidad"));
+                        csMov.setString(3, "Entrada - Anulación pedido #" + idPedido);
+                        csMov.setInt(4, rsDet.getInt("idProducto"));
+                        csMov.addBatch();
+                    }
+                }
+                csMov.executeBatch();
             }
-            psMov.executeBatch();
-            rsDet.close();
-            psSel.close();
-            psMov.close();
 
-            PreparedStatement psDelDetalle = conTx.prepareStatement("DELETE FROM detalle_pedido WHERE idPedido = ?");
-            psDelDetalle.setInt(1, idPedido);
-            psDelDetalle.executeUpdate();
-            psDelDetalle.close();
+            try (CallableStatement csDelDet = conTx.prepareCall(sqlEliminarDetalle)) {
+                csDelDet.setInt(1, idPedido);
+                csDelDet.executeUpdate();
+            }
 
-            PreparedStatement psDelPedido = conTx.prepareStatement("DELETE FROM pedidos WHERE idPedido = ?");
-            psDelPedido.setInt(1, idPedido);
-            psDelPedido.executeUpdate();
-            psDelPedido.close();
+            try (CallableStatement csDelPed = conTx.prepareCall(sqlEliminarPedido)) {
+                csDelPed.setInt(1, idPedido);
+                csDelPed.executeUpdate();
+            }
 
             conTx.commit();
-        } catch (Exception e) {
-            System.out.println("❌ Error al eliminar pedido: " + e.getMessage());
-            try {
-                if (conTx != null) conTx.rollback();
-            } catch (SQLException ex) {
-                System.out.println("Error en rollback: " + ex.getMessage());
+
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar el pedido (" + idPedido + "): " + e.getMessage());
+            if (conTx != null) {
+                try {
+                    conTx.rollback();
+                } catch (SQLException ex) {
+                    System.err.println("Error en rollback: " + ex.getMessage());
+                }
             }
         } finally {
-            try {
-                if (conTx != null) {
+            if (conTx != null) {
+                try {
                     conTx.setAutoCommit(true);
                     conTx.close();
+                } catch (SQLException e) {
+                    System.err.println("Error al cerrar conexión de la transacción: " + e.getMessage());
                 }
-            } catch (SQLException e) {
-                System.out.println("Error al cerrar recursos: " + e.getMessage());
             }
         }
     }

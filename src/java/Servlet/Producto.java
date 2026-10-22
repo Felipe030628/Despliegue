@@ -1,161 +1,72 @@
 package Servlet;
 
-import Controlador.ProductosDAO;
-import Controlador.CategoriaDAO;
-import Modelo.Productos;
-import Modelo.Categorias;
-import Util.JsonUtil;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import Controlador.CategoriaDAO;
+import Controlador.ProductosDAO;
+import Modelo.Categorias;
+import Modelo.Productos;
+import Util.JsonUtil;
+
+/**
+ * Controlador de peticiones HTTP para el catálogo de productos.
+ * Gestiona operaciones CRUD tanto para las vistas JSP tradicionales
+ * como para endpoints en formato JSON dirigidos a aplicaciones móviles/web.
+ */
 @WebServlet(name = "Producto", urlPatterns = {"/Producto"})
 public class Producto extends HttpServlet {
 
-    ProductosDAO dao = new ProductosDAO();
-    CategoriaDAO catDao = new CategoriaDAO();
+    private final ProductosDAO productosDAO = new ProductosDAO();
+    private final CategoriaDAO categoriaDAO = new CategoriaDAO();
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String accion = request.getParameter("accion");
-        if (accion == null) accion = "listar";
+        if (accion == null) {
+            accion = "listar";
+        }
 
         switch (accion) {
             case "listar":
-                // 1. Enviamos los productos para la tabla
-                request.setAttribute("lista", dao.listarProductos());
-                
-                // 2. ENVIAMOS LAS CATEGORÍAS PARA EL SELECT
-                List<Categorias> listaCategorias = catDao.listar();
-                request.setAttribute("listaCategorias", listaCategorias);
-                
-                // 3. Redirigimos a la vista
-                request.getRequestDispatcher("Vista/Productos.jsp").forward(request, response);
+                listarProductosVista(request, response);
                 break;
 
-            // ---------- NUEVO: listado en JSON para la app Flutter (solo consulta) ----------
-            case "listarJson": {
-                response.setContentType("application/json;charset=UTF-8");
-                List<Productos> listaProd = dao.listarProductos();
-                List<Categorias> cats = catDao.listar();
-                Map<Integer, String> catMap = new HashMap<>();
-                for (Categorias c : cats) {
-                    catMap.put(c.getIdCategorias(), c.getNombre_categoria());
-                }
-
-                StringBuilder sb = new StringBuilder("[");
-                for (int i = 0; i < listaProd.size(); i++) {
-                    Productos p = listaProd.get(i);
-                    if (i > 0) sb.append(",");
-                    int stock = dao.obtenerStock(p.getId());
-                    String nomCat = catMap.getOrDefault(p.getIdCategoria(), "");
-                    sb.append("{")
-                      .append("\"id\":").append(p.getId()).append(",")
-                      .append("\"nombre\":").append(JsonUtil.str(p.getNombre())).append(",")
-                      .append("\"precio\":").append(p.getPrecio()).append(",")
-                      .append("\"fecha_vencimiento\":").append(JsonUtil.str(p.getFecha_vencimiento())).append(",")
-                      .append("\"idCategoria\":").append(p.getIdCategoria()).append(",")
-                      .append("\"nomCategoria\":").append(JsonUtil.str(nomCat)).append(",")
-                      .append("\"stock\":").append(stock)
-                      .append("}");
-                }
-                sb.append("]");
-                response.getWriter().print(sb.toString());
+            case "listarJson":
+                listarProductosJson(response);
                 break;
-            }
 
-            // ---------- NUEVO: eliminar devolviendo JSON en vez de redirigir ----------
-            case "eliminarJson": {
-                response.setContentType("application/json;charset=UTF-8");
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    dao.eliminarProducto(id);
-                    response.getWriter().print("{\"success\":true}");
-                } catch (Exception e) {
-                    response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
-                }
+            case "eliminarJson":
+                eliminarProductoJson(request, response);
                 break;
-            }
 
             case "nuevo":
-                List<Categorias> listaCatNuevo = catDao.listar();
-                request.setAttribute("listaCategorias", listaCatNuevo);
-                request.getRequestDispatcher("Vista/FormularioProducto.jsp").forward(request, response);
+                nuevoFormularioVista(request, response);
                 break;
 
             case "guardar":
-                try {
-                    String nombre = request.getParameter("nombre");
-                    double precio = Double.parseDouble(request.getParameter("precio"));
-                    String fecha = request.getParameter("fecha_vencimiento");
-                    int idCat = Integer.parseInt(request.getParameter("idCategoria"));
-
-                    Productos p = new Productos();
-                    p.setNombre(nombre);
-                    p.setPrecio(precio);
-                    p.setFecha_vencimiento(fecha);
-                    p.setIdCategoria(idCat);
-
-                    dao.registrarProducto(p);
-                } catch (Exception e) {
-                    System.err.println("Error al guardar producto: " + e.getMessage());
-                }
-                response.sendRedirect("Producto?accion=listar");
+                guardarProducto(request, response);
                 break;
 
             case "cargar":
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    Productos p = dao.listarPorId(id);
-                    request.setAttribute("producto", p);
-                    
-                    List<Categorias> listaCatCargar = catDao.listar();
-                    request.setAttribute("listaCategorias", listaCatCargar);
-                    
-                    request.getRequestDispatcher("Vista/EditarProducto.jsp").forward(request, response);
-                } catch (Exception e) {
-                    System.err.println("Error al cargar producto: " + e.getMessage());
-                    response.sendRedirect("Producto?accion=listar");
-                }
+                cargarProductoEdicion(request, response);
                 break;
 
             case "actualizar":
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    String nombre = request.getParameter("nombre");
-                    double precio = Double.parseDouble(request.getParameter("precio"));
-                    String fecha = request.getParameter("fecha_vencimiento");
-                    int idCat = Integer.parseInt(request.getParameter("idCategoria"));
-
-                    Productos p = new Productos();
-                    p.setId(id);
-                    p.setNombre(nombre);
-                    p.setPrecio(precio);
-                    p.setFecha_vencimiento(fecha);
-                    p.setIdCategoria(idCat);
-
-                    dao.actualizarProducto(p);
-                } catch (Exception e) {
-                    System.err.println("Error al actualizar producto: " + e.getMessage());
-                }
-                response.sendRedirect("Producto?accion=listar");
+                actualizarProducto(request, response);
                 break;
 
             case "eliminar":
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    dao.eliminarProducto(id);
-                } catch (Exception e) {
-                    System.err.println("Error al eliminar producto en Servlet: " + e.getMessage());
-                }
-                response.sendRedirect("Producto?accion=listar");
+                eliminarProducto(request, response);
                 break;
 
             default:
@@ -164,13 +75,138 @@ public class Producto extends HttpServlet {
         }
     }
 
+    private void listarProductosVista(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("lista", productosDAO.listarProductos());
+        request.setAttribute("listaCategorias", categoriaDAO.listar());
+        request.getRequestDispatcher("Vista/Productos.jsp").forward(request, response);
+    }
+
+    private void listarProductosJson(HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        List<Productos> listaProd = productosDAO.listarProductos();
+        List<Categorias> cats = categoriaDAO.listar();
+
+        Map<Integer, String> catMap = cats.stream()
+                .collect(Collectors.toMap(Categorias::getIdCategorias, Categorias::getNombre_categoria, (e1, e2) -> e1));
+
+        String jsonArray = listaProd.stream()
+                .map(p -> {
+                    int stock = productosDAO.obtenerStock(p.getId());
+                    String nomCat = catMap.getOrDefault(p.getIdCategoria(), "");
+                    return mapProductoToJson(p, nomCat, stock);
+                })
+                .collect(Collectors.joining(","));
+
+        response.getWriter().print("[" + jsonArray + "]");
+    }
+
+    private void eliminarProductoJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            productosDAO.eliminarProducto(id);
+            response.getWriter().print("{\"success\":true}");
+        } catch (Exception e) {
+            String jsonError = String.format("{\"success\":false,\"error\":%s}", JsonUtil.str(e.getMessage()));
+            response.getWriter().print(jsonError);
+        }
+    }
+
+    private void nuevoFormularioVista(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("listaCategorias", categoriaDAO.listar());
+        request.getRequestDispatcher("Vista/FormularioProducto.jsp").forward(request, response);
+    }
+
+    private void guardarProducto(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            String nombre = request.getParameter("nombre");
+            double precio = Double.parseDouble(request.getParameter("precio"));
+            String fecha = request.getParameter("fecha_vencimiento");
+            int idCat = Integer.parseInt(request.getParameter("idCategoria"));
+
+            Productos p = new Productos();
+            p.setNombre(nombre);
+            p.setPrecio(precio);
+            p.setFecha_vencimiento(fecha);
+            p.setIdCategoria(idCat);
+
+            productosDAO.registrarProducto(p);
+        } catch (Exception e) {
+            System.err.println("Error al guardar el producto: " + e.getMessage());
+        }
+        response.sendRedirect("Producto?accion=listar");
+    }
+
+    private void cargarProductoEdicion(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            Productos p = productosDAO.listarPorId(id);
+            request.setAttribute("producto", p);
+            request.setAttribute("listaCategorias", categoriaDAO.listar());
+            request.getRequestDispatcher("Vista/EditarProducto.jsp").forward(request, response);
+        } catch (Exception e) {
+            System.err.println("Error al cargar el producto para edición: " + e.getMessage());
+            response.sendRedirect("Producto?accion=listar");
+        }
+    }
+
+    private void actualizarProducto(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            String nombre = request.getParameter("nombre");
+            double precio = Double.parseDouble(request.getParameter("precio"));
+            String fecha = request.getParameter("fecha_vencimiento");
+            int idCat = Integer.parseInt(request.getParameter("idCategoria"));
+
+            Productos p = new Productos();
+            p.setId(id);
+            p.setNombre(nombre);
+            p.setPrecio(precio);
+            p.setFecha_vencimiento(fecha);
+            p.setIdCategoria(idCat);
+
+            productosDAO.actualizarProducto(p);
+        } catch (Exception e) {
+            System.err.println("Error al actualizar el producto: " + e.getMessage());
+        }
+        response.sendRedirect("Producto?accion=listar");
+    }
+
+    private void eliminarProducto(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            productosDAO.eliminarProducto(id);
+        } catch (Exception e) {
+            System.err.println("Error al eliminar el producto: " + e.getMessage());
+        }
+        response.sendRedirect("Producto?accion=listar");
+    }
+
+    private String mapProductoToJson(Productos p, String nomCategoria, int stock) {
+        return String.format(
+            "{\"id\":%d,\"nombre\":%s,\"precio\":%.2f,\"fecha_vencimiento\":%s,\"idCategoria\":%d,\"nomCategoria\":%s,\"stock\":%d}",
+            p.getId(),
+            JsonUtil.str(p.getNombre()),
+            p.getPrecio(),
+            JsonUtil.str(p.getFecha_vencimiento()),
+            p.getIdCategoria(),
+            JsonUtil.str(nomCategoria),
+            stock
+        );
+    }
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         processRequest(request, response);
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         processRequest(request, response);
     }
 }

@@ -1,5 +1,6 @@
 package Servlet;
 
+import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Cookie;
@@ -7,17 +8,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.io.IOException;
 
 /**
- * Cierra la sesión del usuario de forma segura:
- *  - Invalida la sesión en el servidor (session.invalidate()), que es lo que
- *    realmente hace que, aunque el navegador vuelva a pedir la página (por
- *    ejemplo al pulsar "atrás"), el AuthFilter ya no encuentre ningún
- *    usuario logueado y lo redirija de nuevo al Login.
- *  - Borra explícitamente la cookie de sesión (JSESSIONID) en el navegador.
- *  - Añade cabeceras "no-cache" también aquí, por si el propio navegador
- *    intentase reutilizar esta respuesta.
+ * Servlet encargado de gestionar el cierre de sesión seguro del usuario.
+ * Invalida la sesión actual, elimina las cookies de autenticación de la sesión
+ * y aplica políticas de restricción de almacenamiento en caché.
  */
 @WebServlet(name = "LogoutServlet", urlPatterns = {"/Logout"})
 public class LogoutServlet extends HttpServlet {
@@ -31,17 +26,18 @@ public class LogoutServlet extends HttpServlet {
         }
 
         Cookie cookie = new Cookie("JSESSIONID", "");
-        String path = request.getContextPath();
-        cookie.setPath(path.isEmpty() ? "/" : path);
+        String contextPath = request.getContextPath();
+        cookie.setPath(contextPath.isEmpty() ? "/" : contextPath);
         cookie.setMaxAge(0);
         cookie.setHttpOnly(true);
+        cookie.setSecure(request.isSecure());
         response.addCookie(cookie);
 
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         response.setHeader("Pragma", "no-cache");
         response.setDateHeader("Expires", 0);
 
-        response.sendRedirect(request.getContextPath() + "/Login.jsp?status=sesion_cerrada");
+        response.sendRedirect(contextPath + "/Login.jsp?status=sesion_cerrada");
     }
 
     @Override

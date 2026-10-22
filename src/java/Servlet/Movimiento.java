@@ -1,29 +1,35 @@
 package Servlet;
 
-import Controlador.MovimientoStockDAO;
-import Controlador.ProductosDAO;
-import Modelo.MovimientosStock;
-import Modelo.Productos;
-import Util.JsonUtil;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import Controlador.MovimientoStockDAO;
+import Controlador.ProductosDAO;
+import Modelo.MovimientosStock;
+import Modelo.Productos;
+import Util.JsonUtil;
+
+/**
+ * Controlador para la gestión de movimientos de inventario y stock.
+ * Atiende solicitudes web (JSP) y peticiones JSON para la aplicación móvil / web.
+ */
 @WebServlet(name = "Movimiento", urlPatterns = {"/Movimiento"})
 public class Movimiento extends HttpServlet {
 
-    MovimientoStockDAO dao = new MovimientoStockDAO();
-    ProductosDAO daoProd = new ProductosDAO();
+    private final MovimientoStockDAO movimientoDAO = new MovimientoStockDAO();
+    private final ProductosDAO productosDAO = new ProductosDAO();
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String accion = request.getParameter("accion");
         if (accion == null) {
             accion = "listar";
@@ -31,128 +37,151 @@ public class Movimiento extends HttpServlet {
 
         switch (accion) {
             case "listar":
-                List<MovimientosStock> lista = dao.listarMovimientos();
-                System.out.println("DEBUG: Se encontraron " + lista.size() + " movimientos en la base de datos.");
-                
-                request.setAttribute("listaMov", lista);
-                request.setAttribute("listaProd", daoProd.listarProductos());
-                request.setAttribute("listaStock", daoProd.listarProductosConStock());
-                request.getRequestDispatcher("Vista/Movimientos.jsp").forward(request, response);
+                listarMovimientosVista(request, response);
                 break;
 
-            // ---------- NUEVO: listado en JSON para la app Flutter (solo consulta) ----------
-            case "listarJson": {
-                response.setContentType("application/json;charset=UTF-8");
-                List<MovimientosStock> listaMov = dao.listarMovimientos();
-                List<Productos> productos = daoProd.listarProductos();
-                Map<Integer, String> prodMap = new HashMap<>();
-                for (Productos p : productos) {
-                    prodMap.put(p.getId(), p.getNombre());
-                }
-
-                StringBuilder sb = new StringBuilder("[");
-                for (int i = 0; i < listaMov.size(); i++) {
-                    MovimientosStock m = listaMov.get(i);
-                    if (i > 0) sb.append(",");
-                    String nombreProd = prodMap.getOrDefault(m.getIdProducto(), "");
-                    sb.append("{")
-                      .append("\"idMovimiento\":").append(m.getIdMovimiento()).append(",")
-                      .append("\"fecha\":").append(JsonUtil.str(m.getFecha())).append(",")
-                      .append("\"cantidad\":").append(m.getCantidad()).append(",")
-                      .append("\"motivo\":").append(JsonUtil.str(m.getMotivo())).append(",")
-                      .append("\"idProducto\":").append(m.getIdProducto()).append(",")
-                      .append("\"nombreProducto\":").append(JsonUtil.str(nombreProd))
-                      .append("}");
-                }
-                sb.append("]");
-                response.getWriter().print(sb.toString());
+            case "listarJson":
+                listarMovimientosJson(response);
                 break;
-            }
 
-            // ---------- NUEVO: eliminar devolviendo JSON en vez de redirigir ----------
-            case "eliminarJson": {
-                response.setContentType("application/json;charset=UTF-8");
-                try {
-                    int idMovimiento = Integer.parseInt(request.getParameter("id"));
-                    dao.eliminarMovimiento(idMovimiento);
-                    response.getWriter().print("{\"success\":true}");
-                } catch (Exception e) {
-                    response.getWriter().print("{\"success\":false,\"error\":" + JsonUtil.str(e.getMessage()) + "}");
-                }
+            case "eliminarJson":
+                eliminarMovimientoJson(request, response);
                 break;
-            }
 
             case "guardar":
-                try {
-                    String fecha = request.getParameter("fecha");
-                    int cantidad = Integer.parseInt(request.getParameter("cantidad"));
-                    String motivo = request.getParameter("motivo");
-                    int idProducto = Integer.parseInt(request.getParameter("idProducto"));
-
-                    MovimientosStock m = new MovimientosStock();
-                    m.setFecha(fecha);
-                    m.setCantidad(cantidad);
-                    m.setMotivo(motivo);
-                    m.setIdProducto(idProducto);
-
-                    dao.registrarMovimiento(m);
-                } catch (Exception e) {
-                    System.err.println("Error al procesar datos: " + e.getMessage());
-                }
-
-                response.sendRedirect("Movimiento?accion=listar");
+                guardarMovimiento(request, response);
                 break;
 
             case "cargar":
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    MovimientosStock m = dao.listarPorId(id);
-                    request.setAttribute("movimiento", m);
-                    request.setAttribute("listaProd", daoProd.listarProductos());
-                    request.getRequestDispatcher("Vista/EditarMovimiento.jsp").forward(request, response);
-                } catch (Exception e) {
-                    System.err.println("Error al cargar para editar: " + e.getMessage());
-                    response.sendRedirect("Movimiento?accion=listar");
-                }
+                cargarMovimientoEdicion(request, response);
                 break;
 
             case "actualizar":
-                try {
-                    int idMovimiento = Integer.parseInt(request.getParameter("idMovimiento"));
-                    String fecha = request.getParameter("fecha");
-                    int cantidad = Integer.parseInt(request.getParameter("cantidad"));
-                    String motivo = request.getParameter("motivo");
-                    int idProducto = Integer.parseInt(request.getParameter("idProducto"));
-
-                    MovimientosStock m = new MovimientosStock();
-                    m.setIdMovimiento(idMovimiento);
-                    m.setFecha(fecha);
-                    m.setCantidad(cantidad);
-                    m.setMotivo(motivo);
-                    m.setIdProducto(idProducto);
-
-                    dao.actualizarMovimiento(m);
-                } catch (Exception e) {
-                    System.err.println("Error al actualizar: " + e.getMessage());
-                }
-
-                response.sendRedirect("Movimiento?accion=listar");
+                actualizarMovimiento(request, response);
                 break;
 
             case "eliminar":
-                try {
-                    int idMovimiento = Integer.parseInt(request.getParameter("id"));
-                    dao.eliminarMovimiento(idMovimiento);
-                } catch (Exception e) {
-                    System.err.println("Error al eliminar movimiento: " + e.getMessage());
-                }
-                response.sendRedirect("Movimiento?accion=listar");
+                eliminarMovimiento(request, response);
                 break;
 
             default:
                 response.sendRedirect("Movimiento?accion=listar");
                 break;
         }
+    }
+
+    private void listarMovimientosVista(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        List<MovimientosStock> lista = movimientoDAO.listarMovimientos();
+        request.setAttribute("listaMov", lista);
+        request.setAttribute("listaProd", productosDAO.listarProductos());
+        request.setAttribute("listaStock", productosDAO.listarProductosConStock());
+        request.getRequestDispatcher("Vista/Movimientos.jsp").forward(request, response);
+    }
+
+    private void listarMovimientosJson(HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        List<MovimientosStock> listaMov = movimientoDAO.listarMovimientos();
+        List<Productos> productos = productosDAO.listarProductos();
+
+        Map<Integer, String> prodMap = productos.stream()
+                .collect(Collectors.toMap(Productos::getId, Productos::getNombre, (e1, e2) -> e1));
+
+        String jsonArray = listaMov.stream()
+                .map(m -> mapMovimientoToJson(m, prodMap.getOrDefault(m.getIdProducto(), "")))
+                .collect(Collectors.joining(","));
+
+        response.getWriter().print("[" + jsonArray + "]");
+    }
+
+    private void eliminarMovimientoJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            int idMovimiento = Integer.parseInt(request.getParameter("id"));
+            movimientoDAO.eliminarMovimiento(idMovimiento);
+            response.getWriter().print("{\"success\":true}");
+        } catch (Exception e) {
+            String jsonError = String.format("{\"success\":false,\"error\":%s}", JsonUtil.str(e.getMessage()));
+            response.getWriter().print(jsonError);
+        }
+    }
+
+    private void guardarMovimiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            String fecha = request.getParameter("fecha");
+            int cantidad = Integer.parseInt(request.getParameter("cantidad"));
+            String motivo = request.getParameter("motivo");
+            int idProducto = Integer.parseInt(request.getParameter("idProducto"));
+
+            MovimientosStock m = new MovimientosStock();
+            m.setFecha(fecha);
+            m.setCantidad(cantidad);
+            m.setMotivo(motivo);
+            m.setIdProducto(idProducto);
+
+            movimientoDAO.registrarMovimiento(m);
+        } catch (Exception e) {
+            System.err.println("Error al guardar movimiento de stock: " + e.getMessage());
+        }
+        response.sendRedirect("Movimiento?accion=listar");
+    }
+
+    private void cargarMovimientoEdicion(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            MovimientosStock m = movimientoDAO.listarPorId(id);
+            request.setAttribute("movimiento", m);
+            request.setAttribute("listaProd", productosDAO.listarProductos());
+            request.getRequestDispatcher("Vista/EditarMovimiento.jsp").forward(request, response);
+        } catch (Exception e) {
+            System.err.println("Error al cargar movimiento para edición: " + e.getMessage());
+            response.sendRedirect("Movimiento?accion=listar");
+        }
+    }
+
+    private void actualizarMovimiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int idMovimiento = Integer.parseInt(request.getParameter("idMovimiento"));
+            String fecha = request.getParameter("fecha");
+            int cantidad = Integer.parseInt(request.getParameter("cantidad"));
+            String motivo = request.getParameter("motivo");
+            int idProducto = Integer.parseInt(request.getParameter("idProducto"));
+
+            MovimientosStock m = new MovimientosStock();
+            m.setIdMovimiento(idMovimiento);
+            m.setFecha(fecha);
+            m.setCantidad(cantidad);
+            m.setMotivo(motivo);
+            m.setIdProducto(idProducto);
+
+            movimientoDAO.actualizarMovimiento(m);
+        } catch (Exception e) {
+            System.err.println("Error al actualizar movimiento de stock: " + e.getMessage());
+        }
+        response.sendRedirect("Movimiento?accion=listar");
+    }
+
+    private void eliminarMovimiento(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            int idMovimiento = Integer.parseInt(request.getParameter("id"));
+            movimientoDAO.eliminarMovimiento(idMovimiento);
+        } catch (Exception e) {
+            System.err.println("Error al eliminar movimiento de stock: " + e.getMessage());
+        }
+        response.sendRedirect("Movimiento?accion=listar");
+    }
+
+    private String mapMovimientoToJson(MovimientosStock m, String nombreProducto) {
+        return String.format(
+            "{\"idMovimiento\":%d,\"fecha\":%s,\"cantidad\":%d,\"motivo\":%s,\"idProducto\":%d,\"nombreProducto\":%s}",
+            m.getIdMovimiento(),
+            JsonUtil.str(m.getFecha()),
+            m.getCantidad(),
+            JsonUtil.str(m.getMotivo()),
+            m.getIdProducto(),
+            JsonUtil.str(nombreProducto)
+        );
     }
 
     @Override

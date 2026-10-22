@@ -1,6 +1,9 @@
 package Controlador;
 
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,19 +11,20 @@ import java.util.Map;
 import Modelo.Productos;
 
 public class ProductosDAO {
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
 
-    // 1. LISTAR PRODUCTOS
+    private final Conexion conexion = new Conexion();
+
+    /**
+     * Obtiene el listado completo de productos.
+     */
     public List<Productos> listarProductos() {
         List<Productos> lista = new ArrayList<>();
-        String sql = "SELECT * FROM productos";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
+        String sql = "{call sp_listar_productos()}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
             while (rs.next()) {
                 Productos p = new Productos();
                 p.setId(rs.getInt("idProductos"));
@@ -30,149 +34,152 @@ public class ProductosDAO {
                 p.setIdCategoria(rs.getInt("categorias_idCategorias"));
                 lista.add(p);
             }
+
         } catch (SQLException e) {
-            System.err.println("Error al listar: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al listar los productos: " + e.getMessage());
         }
+
         return lista;
     }
 
-    // 2. REGISTRAR PRODUCTO
+    /**
+     * Registra un nuevo producto en la base de datos.
+     */
     public void registrarProducto(Productos p) {
-        String sql = "INSERT INTO productos (nombre, precio, fecha_vencimiento, categorias_idCategorias) VALUES (?,?,?,?)";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, p.getNombre());
-            ps.setDouble(2, p.getPrecio());
-            ps.setString(3, p.getFecha_vencimiento());
-            ps.setInt(4, p.getIdCategoria());
-            ps.executeUpdate();
+        String sql = "{call sp_registrar_producto(?, ?, ?, ?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setString(1, p.getNombre());
+            cs.setDouble(2, p.getPrecio());
+            cs.setString(3, p.getFecha_vencimiento());
+            cs.setInt(4, p.getIdCategoria());
+            cs.executeUpdate();
+
         } catch (SQLException e) {
-            System.err.println("Error al registrar: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al registrar el producto: " + e.getMessage());
         }
     }
 
-    // 3. ACTUALIZAR PRODUCTO
+    /**
+     * Actualiza la información de un producto existente.
+     */
     public void actualizarProducto(Productos p) {
-        String sql = "UPDATE productos SET nombre=?, precio=?, fecha_vencimiento=?, categorias_idCategorias=? WHERE idProductos=?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, p.getNombre());
-            ps.setDouble(2, p.getPrecio());
-            ps.setString(3, p.getFecha_vencimiento());
-            ps.setInt(4, p.getIdCategoria());
-            ps.setInt(5, p.getId());
-            ps.executeUpdate();
+        String sql = "{call sp_actualizar_producto(?, ?, ?, ?, ?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, p.getId());
+            cs.setString(2, p.getNombre());
+            cs.setDouble(3, p.getPrecio());
+            cs.setString(4, p.getFecha_vencimiento());
+            cs.setInt(5, p.getIdCategoria());
+            cs.executeUpdate();
+
         } catch (SQLException e) {
-            System.err.println("Error al actualizar: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al actualizar el producto (" + p.getId() + "): " + e.getMessage());
         }
     }
 
-    // 4. ELIMINAR PRODUCTO (Corregido a idProductos para que coincida con tu BD)
+    /**
+     * Elimina un producto por su ID.
+     */
     public void eliminarProducto(int id) {
-        String sql = "DELETE FROM productos WHERE idProductos = ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, id);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            System.out.println("❌ Error al eliminar producto: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+        String sql = "{call sp_eliminar_producto(?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar el producto (" + id + "): " + e.getMessage());
         }
     }
 
-    // Método para contar productos que están en stock crítico
+    /**
+     * Obtiene el total de productos registrados en el sistema.
+     */
     public int contarProductosCriticos() {
         int total = 0;
-        String sql = "SELECT COUNT(*) FROM productos"; 
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            if (rs.next()) total = rs.getInt(1);
-            System.out.println("DEBUG: Total productos encontrados: " + total);
-        } catch (Exception e) { 
-            System.out.println("Error: " + e.getMessage()); 
-        } finally { 
-            cerrarRecursos(); 
+        String sql = "{call sp_contar_productos_criticos_total()}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
+            if (rs.next()) {
+                total = rs.getInt("total");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al contar productos críticos: " + e.getMessage());
         }
+
         return total;
     }
 
-    // Método para contar la variedad de marcas distintas en tu inventario
+    /**
+     * Obtiene la cantidad total de marcas/productos registrados.
+     */
     public int contarTotalMarcas() {
         int total = 0;
-        String sql = "SELECT COUNT(*) FROM productos"; 
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
+        String sql = "{call sp_contar_total_marcas()}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
             if (rs.next()) {
-                total = rs.getInt(1);
+                total = rs.getInt("total");
             }
-        } catch (Exception e) {
-            System.out.println("Error en contarTotalMarcas: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+
+        } catch (SQLException e) {
+            System.err.println("Error al contar total de marcas: " + e.getMessage());
         }
+
         return total;
     }
 
-    // Distribución real de productos por categoría (para la dona y las barras del Panel)
-    // Devuelve una lista ordenada de mayor a menor con el nombre de la categoría y
-    // cuántos productos tiene registrados esa categoría en este momento.
+    /**
+     * Obtiene la distribución de productos agrupados por categoría.
+     */
     public List<Map<String, Object>> obtenerDistribucionCategorias() {
         List<Map<String, Object>> lista = new ArrayList<>();
-        String sql = "SELECT c.nombre_categoria AS categoria, COUNT(p.idProductos) AS total "
-                + "FROM categorias c "
-                + "LEFT JOIN productos p ON p.categorias_idCategorias = c.idCategorias "
-                + "GROUP BY c.idCategorias, c.nombre_categoria "
-                + "ORDER BY total DESC";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
+        String sql = "{call sp_obtener_distribucion_categorias()}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
             while (rs.next()) {
                 Map<String, Object> fila = new LinkedHashMap<>();
                 fila.put("categoria", rs.getString("categoria"));
                 fila.put("total", rs.getInt("total"));
                 lista.add(fila);
             }
+
         } catch (SQLException e) {
-            System.err.println("Error en obtenerDistribucionCategorias: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al obtener distribución por categorías: " + e.getMessage());
         }
+
         return lista;
     }
 
-    // 1b. LISTAR PRODUCTOS CON SU STOCK ACTUAL (para el selector de Pedidos)
-    // El stock no se guarda en una columna: se calcula sumando entradas y restando
-    // salidas registradas en movimientos_stock, igual que en contarProductosCriticos().
+    /**
+     * Obtiene la lista de productos calculando su stock actual según movimientos.
+     */
     public List<Productos> listarProductosConStock() {
         List<Productos> lista = new ArrayList<>();
-        String sql = "SELECT p.idProductos, p.nombre, p.precio, p.categorias_idCategorias, "
-                + "COALESCE(SUM(CASE "
-                + "    WHEN LOWER(m.motivo) LIKE 'entrada%' THEN m.cantidad "
-                + "    WHEN LOWER(m.motivo) LIKE 'salida%' THEN -m.cantidad "
-                + "    ELSE 0 END), 0) AS stock "
-                + "FROM productos p "
-                + "LEFT JOIN movimientos_stock m ON m.idProducto = p.idProductos "
-                + "GROUP BY p.idProductos, p.nombre, p.precio, p.categorias_idCategorias "
-                + "ORDER BY p.nombre";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
+        String sql = "{call sp_listar_productos_con_stock()}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
+
             while (rs.next()) {
                 Productos p = new Productos();
                 p.setId(rs.getInt("idProductos"));
@@ -182,94 +189,97 @@ public class ProductosDAO {
                 p.setStock(rs.getInt("stock"));
                 lista.add(p);
             }
+
         } catch (SQLException e) {
-            System.err.println("Error en listarProductosConStock: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al listar productos con stock: " + e.getMessage());
         }
+
         return lista;
     }
 
-    // Stock actual de un solo producto (entradas - salidas)
+    /**
+     * Obtiene el stock disponible de un producto específico.
+     */
     public int obtenerStock(int idProducto) {
         int stock = 0;
-        String sql = "SELECT COALESCE(SUM(CASE "
-                + "    WHEN LOWER(motivo) LIKE 'entrada%' THEN cantidad "
-                + "    WHEN LOWER(motivo) LIKE 'salida%' THEN -cantidad "
-                + "    ELSE 0 END), 0) AS stock "
-                + "FROM movimientos_stock WHERE idProducto = ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, idProducto);
-            rs = ps.executeQuery();
-            if (rs.next()) stock = rs.getInt("stock");
+        String sql = "{call sp_obtener_stock_producto(?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, idProducto);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    stock = rs.getInt("stock");
+                }
+            }
+
         } catch (SQLException e) {
-            System.err.println("Error en obtenerStock: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al obtener stock del producto (" + idProducto + "): " + e.getMessage());
         }
+
         return stock;
     }
 
-    // Método para cerrar recursos de forma segura
-    private void cerrarRecursos() {
-        try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception e) {
-            System.out.println("Error al cerrar recursos: " + e.getMessage());
-        }
-    }
-    
+    /**
+     * Consulta un producto por su ID.
+     */
     public Productos listarPorId(int id) {
         Productos p = new Productos();
-        String sql = "SELECT * FROM productos WHERE idProductos = ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setInt(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                p.setId(rs.getInt("idProductos"));
-                p.setNombre(rs.getString("nombre"));
-                p.setPrecio(rs.getDouble("precio"));
-                p.setFecha_vencimiento(rs.getString("fecha_vencimiento"));
-                p.setIdCategoria(rs.getInt("categorias_idCategorias"));
+        String sql = "{call sp_buscar_producto_por_id(?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                if (rs.next()) {
+                    p.setId(rs.getInt("idProductos"));
+                    p.setNombre(rs.getString("nombre"));
+                    p.setPrecio(rs.getDouble("precio"));
+                    p.setFecha_vencimiento(rs.getString("fecha_vencimiento"));
+                    p.setIdCategoria(rs.getInt("categorias_idCategorias"));
+                }
             }
+
         } catch (SQLException e) {
-            System.err.println("Error al listar por ID: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al buscar producto por ID (" + id + "): " + e.getMessage());
         }
+
         return p;
     }
 
-    // 13. Buscar productos por nombre (barra de búsqueda global del Panel)
+    /**
+     * Busca productos por coincidencia en el nombre con un límite de resultados.
+     */
     public List<Productos> buscarPorNombre(String termino, int limite) {
         List<Productos> lista = new ArrayList<>();
-        String sql = "SELECT * FROM productos WHERE nombre LIKE ? ORDER BY nombre LIMIT ?";
-        try {
-            con = cn.Conexion();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + termino + "%");
-            ps.setInt(2, limite);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                Productos p = new Productos();
-                p.setId(rs.getInt("idProductos"));
-                p.setNombre(rs.getString("nombre"));
-                p.setPrecio(rs.getDouble("precio"));
-                p.setFecha_vencimiento(rs.getString("fecha_vencimiento"));
-                p.setIdCategoria(rs.getInt("categorias_idCategorias"));
-                lista.add(p);
+        String sql = "{call sp_buscar_productos_por_nombre(?, ?)}";
+
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setString(1, termino);
+            cs.setInt(2, limite);
+
+            try (ResultSet rs = cs.executeQuery()) {
+                while (rs.next()) {
+                    Productos p = new Productos();
+                    p.setId(rs.getInt("idProductos"));
+                    p.setNombre(rs.getString("nombre"));
+                    p.setPrecio(rs.getDouble("precio"));
+                    p.setFecha_vencimiento(rs.getString("fecha_vencimiento"));
+                    p.setIdCategoria(rs.getInt("categorias_idCategorias"));
+                    lista.add(p);
+                }
             }
+
         } catch (SQLException e) {
-            System.err.println("Error en buscarPorNombre: " + e.getMessage());
-        } finally {
-            cerrarRecursos();
+            System.err.println("Error al buscar productos por nombre: " + e.getMessage());
         }
+
         return lista;
     }
 }

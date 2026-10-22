@@ -1,44 +1,55 @@
 package Controlador;
 
-import Modelo.PedidoCabecera;
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import Modelo.PedidoCabecera;
 
 public class PedidoCabeceraDAO {
 
-    private String url = "jdbc:mysql://localhost:3307/barstock";
-    private String user = "root";
-    private String pass = "";
+    private final Conexion conexion = new Conexion();
 
-    // INSERTAR
+    /**
+     * Inserta un nuevo registro de cabecera de pedido mediante procedimiento almacenado.
+     * 
+     * @param p Objeto PedidoCabecera con la información del pedido.
+     */
     public void insertar(PedidoCabecera p) {
-        String sql = "INSERT INTO pedido_cabecera (fecha_hora, usuarios_idUsuarios, mesa_idMesa) VALUES (?, ?, ?)";
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_insertar_pedido_cabecera(?, ?, ?)}";
 
-            // Usamos Timestamp para guardar fecha y hora exacta
-            ps.setTimestamp(1, new java.sql.Timestamp(p.fecha_hora.getTime()));
-            ps.setInt(2, p.usuarios_idUsuarios);
-            ps.setString(3, p.mesa_idMesa);
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
 
-            ps.executeUpdate();
-            System.out.println("Cabecera de pedido insertada correctamente");
-        } catch (Exception e) {
-            e.printStackTrace();
+            cs.setTimestamp(1, new Timestamp(p.fecha_hora.getTime()));
+            cs.setInt(2, p.usuarios_idUsuarios);
+            cs.setString(3, p.mesa_idMesa);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al insertar la cabecera de pedido: " + e.getMessage());
         }
     }
 
-    // CONSULTAR (Individual)
+    /**
+     * Obtiene una cabecera de pedido por su ID.
+     * 
+     * @param id Identificador único del pedido.
+     * @return Objeto PedidoCabecera poblado o vacío si no se encuentra.
+     */
     public PedidoCabecera consultar(int id) {
         PedidoCabecera p = new PedidoCabecera();
-        String sql = "SELECT * FROM pedido_cabecera WHERE idPedido = ?";
-        
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_consultar_pedido_cabecera(?)}";
 
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+
+            try (ResultSet rs = cs.executeQuery()) {
                 if (rs.next()) {
                     p.idPedido = rs.getInt("idPedido");
                     p.fecha_hora = rs.getTimestamp("fecha_hora");
@@ -46,20 +57,26 @@ public class PedidoCabeceraDAO {
                     p.mesa_idMesa = rs.getString("mesa_idMesa");
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        } catch (SQLException e) {
+            System.err.println("Error al consultar la cabecera de pedido por ID (" + id + "): " + e.getMessage());
         }
+
         return p;
     }
 
-    // LISTAR (Todos los pedidos)
+    /**
+     * Obtiene el listado de cabeceras de pedido ordenadas por fecha de manera descendente.
+     * 
+     * @return List con las cabeceras de pedido.
+     */
     public List<PedidoCabecera> listar() {
         List<PedidoCabecera> lista = new ArrayList<>();
-        String sql = "SELECT * FROM pedido_cabecera ORDER BY fecha_hora DESC";
+        String sql = "{call sp_listar_pedido_cabeceras()}";
 
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql);
+             ResultSet rs = cs.executeQuery()) {
 
             while (rs.next()) {
                 PedidoCabecera p = new PedidoCabecera();
@@ -69,41 +86,52 @@ public class PedidoCabeceraDAO {
                 p.mesa_idMesa = rs.getString("mesa_idMesa");
                 lista.add(p);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+        } catch (SQLException e) {
+            System.err.println("Error al obtener el listado de cabeceras de pedido: " + e.getMessage());
         }
+
         return lista;
     }
 
-    // ACTUALIZAR
+    /**
+     * Actualiza la información de una cabecera de pedido existente.
+     * 
+     * @param p Objeto PedidoCabecera con la información actualizada.
+     */
     public void actualizar(PedidoCabecera p) {
-        String sql = "UPDATE pedido_cabecera SET fecha_hora=?, usuarios_idUsuarios=?, mesa_idMesa=? WHERE idPedido=?";
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_actualizar_pedido_cabecera(?, ?, ?, ?)}";
 
-            ps.setTimestamp(1, new java.sql.Timestamp(p.fecha_hora.getTime()));
-            ps.setInt(2, p.usuarios_idUsuarios);
-            ps.setString(3, p.mesa_idMesa);
-            ps.setInt(4, p.idPedido);
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
 
-            ps.executeUpdate();
-            System.out.println("Cabecera de pedido actualizada correctamente");
-        } catch (Exception e) {
-            e.printStackTrace();
+            cs.setInt(1, p.idPedido);
+            cs.setTimestamp(2, new Timestamp(p.fecha_hora.getTime()));
+            cs.setInt(3, p.usuarios_idUsuarios);
+            cs.setString(4, p.mesa_idMesa);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al actualizar la cabecera de pedido (" + p.idPedido + "): " + e.getMessage());
         }
     }
 
-    // ELIMINAR
+    /**
+     * Elimina un registro de cabecera de pedido por su ID.
+     * 
+     * @param id Identificador del pedido a eliminar.
+     */
     public void eliminar(int id) {
-        String sql = "DELETE FROM pedido_cabecera WHERE idPedido = ?";
-        try (Connection con = DriverManager.getConnection(url, user, pass);
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "{call sp_eliminar_pedido_cabecera(?)}";
 
-            ps.setInt(1, id);
-            ps.executeUpdate();
-            System.out.println("Cabecera de pedido eliminada correctamente");
-        } catch (Exception e) {
-            e.printStackTrace();
+        try (Connection con = conexion.Conexion();
+             CallableStatement cs = con.prepareCall(sql)) {
+
+            cs.setInt(1, id);
+            cs.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Error al eliminar la cabecera de pedido (" + id + "): " + e.getMessage());
         }
     }
 }
